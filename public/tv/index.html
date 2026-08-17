@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deal or No Deal - TV Display</title>
+
+  <style>
+    :root {
+      --blue-dark: #001333;
+      --blue: #004e9e;
+      --gold: #ffd700;
+      --gold-dark: #a97800;
+      --white: #ffffff;
+      --green: #29d34a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      width: 100vw;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      color: var(--white);
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--blue-dark);
+    }
+
+    #connectionStatus {
+      position: fixed;
+      z-index: 1000;
+      right: 15px;
+      bottom: 15px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      color: white;
+      background: #9b1c1c;
+      font-size: 14px;
+    }
+
+    .tv-page {
+      display: none;
+      width: 100vw;
+      min-height: 100vh;
+    }
+
+    .tv-page.active { display: flex; }
+
+    /* SPLASH */
+    #splashPage {
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+      background:
+        radial-gradient(circle at center, #d89200, transparent 35%),
+        linear-gradient(135deg, #211500, #8a5900, #211500);
+    }
+    .splash-card {
+      width: min(1200px, 90vw);
+      padding: 70px 40px;
+      border: 8px solid var(--gold);
+      border-radius: 35px;
+      background: rgba(0, 0, 0, 0.65);
+      box-shadow:
+        0 0 40px rgba(255, 215, 0, 0.7),
+        inset 0 0 40px rgba(255, 215, 0, 0.2);
+    }
+    .splash-card h1 {
+      margin: 0;
+      color: var(--gold);
+      font-size: clamp(60px, 9vw, 150px);
+      line-height: 0.9;
+      text-shadow: 5px 5px 0 #6c4300;
+    }
+    .splash-card .or-text {
+      margin: 20px 0;
+      font-size: clamp(35px, 5vw, 80px);
+    }
+    .splash-card h2 {
+      margin: 0;
+      color: #ff9d00;
+      font-size: clamp(55px, 8vw, 130px);
+    }
+
+    /* ROULETTE */
+    #roulettePage {
+      position: relative;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 25px;
+      padding: 35px;
+      text-align: center;
+      background: radial-gradient(circle at center, #0071c5, #001333 70%);
+    }
+    #roulettePage h1 {
+      margin: 0;
+      color: var(--gold);
+      font-size: clamp(45px, 6vw, 90px);
+    }
+    .roulette-container { position: relative; width: min(70vw, 600px); aspect-ratio: 1; }
+    .roulette-pointer {
+      position: absolute; z-index: 5; top: -25px; left: 50%;
+      width: 0; height: 0;
+      border-top: 45px solid var(--gold);
+      border-right: 22px solid transparent;
+      border-left: 22px solid transparent;
+      transform: translateX(-50%);
+      filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9));
+    }
+    .roulette-wheel {
+      position: relative; width: 100%; height: 100%;
+      border: 15px solid var(--gold); border-radius: 50%;
+      background: #07162e;
+      box-shadow: 0 0 40px rgba(255, 215, 0, 0.7), inset 0 0 20px rgba(0, 0, 0, 0.5);
+      transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+    }
+    .roulette-name {
+      position: absolute; top: 50%; left: 50%;
+      display: flex; justify-content: flex-end; align-items: center;
+      width: 50%; height: 30px; padding-right: 15px;
+      color: white; font-size: 14px; font-weight: bold;
+      transform-origin: 0 50%; pointer-events: none;
+    }
+    .roulette-center {
+      position: absolute; z-index: 4; top: 50%; left: 50%;
+      display: grid; width: 60px; height: 60px; place-items: center;
+      border: 5px solid var(--gold); border-radius: 50%;
+      background: var(--blue-dark); transform: translate(-50%, -50%);
+    }
+    .result-popup {
+      position: fixed; z-index: 100; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0, 0, 0, 0.75);
+    }
+    .result-popup.visible { display: flex; }
+    .result-card {
+      padding: 60px 80px;
+      border: 8px solid var(--gold); border-radius: 30px;
+      text-align: center;
+      background: linear-gradient(135deg, #002655, #0058a5, #002655);
+      box-shadow: 0 0 60px rgba(255, 215, 0, 0.9);
+      animation: popIn 0.5s ease-out;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .result-card .label { margin-bottom: 20px; color: var(--gold); font-size: 32px; }
+    .result-card .name {
+      color: white; font-size: clamp(60px, 8vw, 120px); font-weight: bold;
+      text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
+    }
+    .result-card .subtitle { margin-top: 20px; color: var(--gold); font-size: 28px; }
+
+    /* HOMEPAGE */
+    #homepagePage {
+      flex-direction: column;
+      padding: 25px;
+      background: linear-gradient(135deg, #001d4c, #0064b7, #001d4c);
+    }
+    .homepage-title {
+      margin: 0 0 20px; text-align: center; color: var(--gold);
+      font-size: clamp(35px, 5vw, 70px);
+    }
+    .homepage-grid {
+      display: grid; flex: 1;
+      grid-template-columns: 220px 1fr 260px; gap: 20px;
+    }
+    .panel {
+      padding: 18px; border: 3px solid var(--gold);
+      border-radius: 18px; background: rgba(0, 0, 0, 0.45);
+    }
+    .panel h2 { margin-top: 0; text-align: center; color: var(--gold); }
+    #valueBoard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .value-item {
+      padding: 13px 8px; border-radius: 9px; text-align: center;
+      color: #111; background: linear-gradient(135deg, #b27a00, #fff08a, #b27a00);
+      font-size: 25px; font-weight: bold;
+      transition: filter 0.3s;
+    }
+    .value-item.claimed {
+      filter: grayscale(100%) brightness(0.6);
+      text-decoration: line-through;
+    }
+    #scoreBoard {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin-bottom: 25px;
+    }
+        .score-card {
+      min-height: 100px;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      color: #111;
+      background: linear-gradient(135deg, #b27a00, #fff08a, #b27a00);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .score-card.score-updated {
+      animation: scoreUpdate 0.8s ease-out;
+    }
+    @keyframes scoreUpdate {
+      0% { transform: scale(1); box-shadow: none; }
+      50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 1);
+      }
+      100% { transform: scale(1); box-shadow: none; }
+    }
+    .score-card strong { display: block; margin-bottom: 12px; font-size: 20px; }
+    .score-number { font-size: 30px; font-weight: bold; }
+    #briefcaseBoard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+    .briefcase {
+      position: relative;
+      display: grid;
+      min-height: 100px;
+      place-items: center;
+      border: 5px solid #b8b8b8;
+      border-radius: 12px;
+      color: var(--gold);
+      background:
+        linear-gradient(145deg, #e8e8e8, #a0a0a0, #d4d4d4);
+      font-size: 38px;
+      font-weight: bold;
+      text-shadow: 3px 3px 0 #5e3c00;
+      box-shadow:
+        inset 0 3px 8px rgba(255,255,255,0.4),
+        inset 0 -3px 8px rgba(0,0,0,0.3),
+        0 4px 10px rgba(0,0,0,0.3);
+      transition: all 0.4s;
+    }
+    .briefcase::before {
+      content: "";
+      position: absolute;
+      top: -2%; left: 20%; right: 20%;
+      height: 5px;
+      background: #444;
+      border-radius: 3px;
+      box-shadow: 0 -8px 0 -3px #666;
+    }
+    .briefcase.opened {
+      filter: grayscale(100%) brightness(0.4);
+      opacity: 0.4;
+      transform: rotate(-3deg) scale(0.95);
+    }
+    .briefcase.lucky {
+      border-color: var(--gold);
+      background:
+        linear-gradient(145deg, #ffe680, #e0a500, #ffcc00);
+      color: #5e3c00;
+      box-shadow:
+        0 0 30px rgba(255, 215, 0, 0.9),
+        inset 0 3px 8px rgba(255,255,255,0.5),
+        inset 0 -3px 8px rgba(0,0,0,0.2);
+      animation: luckyGlow 1.8s ease-in-out infinite alternate;
+    }
+    @keyframes luckyGlow {
+      from { box-shadow: 0 0 25px rgba(255, 215, 0, 0.7), inset 0 3px 8px rgba(255,255,255,0.5); }
+      to { box-shadow: 0 0 45px rgba(255, 215, 0, 1), inset 0 3px 8px rgba(255,255,255,0.5); }
+    }
+    #offerBoard { display: grid; gap: 12px; }
+    .offer-item {
+      min-height: 65px; padding: 13px; border-radius: 10px;
+      color: #111; background: linear-gradient(135deg, #ae7700, #ffe879);
+      font-weight: bold;
+    }
+    .lucky-star-info {
+      margin-top: 20px; padding: 15px;
+      border: 2px solid var(--gold); border-radius: 12px;
+      text-align: center; background: rgba(0, 0, 0, 0.55);
+      font-size: 20px;
+    }
+
+    /* BRIEFCASE PAGE */
+    #briefcasePage {
+      align-items: center; justify-content: center;
+      padding: 25px;
+      background: linear-gradient(135deg, #001d4c, #0064b7, #001d4c);
+    }
+    .briefcase-layout {
+      display: grid;
+      grid-template-columns: 100px 1fr 100px;
+      gap: 25px;
+      width: 100%; max-width: 1500px;
+      align-items: stretch;
+    }
+    .group-column {
+      display: grid;
+      grid-template-rows: repeat(4, 1fr);
+      gap: 15px;
+    }
+    .group-indicator {
+      display: grid; place-items: center;
+      border: 4px solid #d69e00;
+      border-radius: 12px;
+      background: white;
+      color: #333;
+      font-size: 42px; font-weight: bold;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    .group-indicator.first-presser {
+      background: linear-gradient(145deg, #4dff77, #00bb28);
+      color: white;
+      border-color: #00871c;
+      box-shadow: 0 0 30px rgba(41, 211, 74, 0.9);
+      transform: scale(1.1);
+    }
+    .group-indicator.locked-out {
+      background: linear-gradient(145deg, #ff6a6a, #b31414);
+      color: white;
+      border-color: #700a0a;
+      opacity: 0.6;
+    }
+    .briefcase-center {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 500px;
+      padding: 35px;
+      border: 8px solid #b8b8b8;
+      border-radius: 20px;
+      background: linear-gradient(145deg, #4a4a4a, #1a1a1a);
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .briefcase-content {
+      width: 100%;
+      padding: 30px;
+      border-radius: 15px;
+      background: rgba(200, 200, 200, 0.95);
+      color: #111;
+    }
+    .question-text {
+      text-align: center;
+      font-size: clamp(24px, 3vw, 42px);
+      font-weight: bold;
+      margin-bottom: 25px;
+      transition: filter 0.4s;
+    }
+    .question-text.blurred {
+      filter: blur(15px);
+      user-select: none;
+    }
+    .choices-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .choice-item {
+      padding: 18px 25px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #d4d4d4, #f5f5f5);
+      font-size: clamp(20px, 2.5vw, 32px);
+      font-weight: bold;
+      border: 3px solid #999;
+    }
+    .value-reveal {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 300px;
+      text-align: center;
+    }
+    .value-reveal .peso {
+      color: var(--gold);
+      font-size: clamp(80px, 15vw, 220px);
+      font-weight: bold;
+      text-shadow: 6px 6px 0 rgba(0,0,0,0.35);
+      animation: valuePop 0.6s ease-out;
+    }
+    @keyframes valuePop {
+      0% { opacity: 0; transform: scale(0.3); }
+      60% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+        .value-reveal .caption {
+      margin-top: 20px;
+      color: #111;
+      font-size: clamp(20px, 2.5vw, 32px);
+      font-weight: bold;
+      animation: captionSlide 0.6s 0.4s ease-out backwards;
+    }
+    @keyframes captionSlide {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .explanation-view {
+      text-align: center;
+    }
+    .explanation-view h3 {
+      margin: 0 0 25px;
+      color: #003a75;
+      font-size: clamp(24px, 3vw, 40px);
+    }
+    .explanation-view ul {
+      list-style: disc inside;
+      text-align: left;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    .explanation-view li {
+      padding: 10px 0;
+      font-size: clamp(20px, 2.5vw, 32px);
+    }
+
+        /* BANKER CALL OVERLAY */
+    .banker-overlay {
+      position: fixed;
+      z-index: 200;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.85);
+    }
+    .banker-overlay.visible {
+      display: flex;
+    }
+    .banker-content {
+      text-align: center;
+      animation: bankerPop 0.5s ease-out;
+    }
+    @keyframes bankerPop {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .phone-icon {
+      font-size: clamp(120px, 20vw, 300px);
+      animation: phoneRing 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes phoneRing {
+      from { transform: rotate(-15deg); }
+      to { transform: rotate(15deg); }
+    }
+    .banker-label {
+      margin-top: 20px;
+      color: #ff2020;
+      font-size: clamp(50px, 7vw, 90px);
+      font-weight: bold;
+      text-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+    }
+    .banker-sub {
+      margin-top: 10px;
+      color: white;
+      font-size: clamp(28px, 4vw, 50px);
+    }
+
+    /* OFFER ITEM HIGHLIGHT */
+    .offer-item.highlighted {
+      background: linear-gradient(135deg, #ffcc00, #ff6a00);
+      color: #111;
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(255, 170, 0, 0.9);
+      animation: offerGlow 1s ease-in-out infinite alternate;
+    }
+    @keyframes offerGlow {
+      from { box-shadow: 0 0 20px rgba(255, 170, 0, 0.6); }
+      to { box-shadow: 0 0 40px rgba(255, 170, 0, 1); }
+    }
+
+    .offer-item.current-round {
+      border: 3px solid #ff2020;
+    }
+
+        /* GAME END SCREEN */
+    #gameEndPage {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background:
+        radial-gradient(circle at center, #d4a500, transparent 50%),
+        linear-gradient(135deg, #1a0500, #4a1800, #1a0500);
+    }
+    .game-end-container {
+      padding: 30px;
+    }
+    .game-end-card {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 50px 40px;
+      border: 10px solid #ffd700;
+      border-radius: 35px;
+      background: rgba(0, 0, 0, 0.7);
+      box-shadow:
+        0 0 80px rgba(255, 215, 0, 0.8),
+        inset 0 0 40px rgba(255, 215, 0, 0.15);
+      animation: endScreenPop 0.8s ease-out;
+    }
+    @keyframes endScreenPop {
+      0% { opacity: 0; transform: scale(0.3) rotate(-10deg); }
+      50% { opacity: 1; transform: scale(1.1) rotate(2deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .game-end-crown {
+      font-size: 120px;
+      animation: crownBounce 1s ease-in-out infinite;
+    }
+    @keyframes crownBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+    .game-end-card h1 {
+      margin: 10px 0 20px;
+      color: #ffd700;
+      font-size: clamp(40px, 6vw, 80px);
+      text-shadow: 4px 4px 0 #6c4300;
+    }
+    .game-end-winner {
+      color: white;
+      font-size: clamp(70px, 12vw, 150px);
+      font-weight: bold;
+      text-shadow: 5px 5px 0 rgba(0,0,0,0.5);
+    }
+    .game-end-score {
+      margin: 15px 0;
+      color: #ffd700;
+      font-size: clamp(50px, 8vw, 100px);
+      font-weight: bold;
+    }
+    .game-end-label {
+      color: #ff9d00;
+      font-size: clamp(30px, 4vw, 50px);
+      font-weight: bold;
+      letter-spacing: 10px;
+    }
+    .game-end-all-scores {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      max-width: 800px;
+      margin: 30px auto 0;
+    }
+    .end-score-item {
+      padding: 12px;
+      border-radius: 10px;
+      color: #111;
+      background: linear-gradient(135deg, #b27a00, #fff08a, #b27a00);
+      font-weight: bold;
+    }
+    .end-score-item.winner {
+      background: linear-gradient(135deg, #ffd700, #fff5a0, #ffd700);
+      border: 3px solid #ffd700;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    }
+
+    /* GAME SHOW IMAGE ON HOMEPAGE */
+    .homepage-logo {
+      position: fixed;
+      bottom: 15px;
+      left: 15px;
+      width: 180px;
+      padding: 8px 15px;
+      border-radius: 10px;
+      text-align: center;
+      color: #ffd700;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid #ffd700;
+      font-size: 14px;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    /* BIGGER OFFER TEXT */
+    .offer-item {
+      min-height: 65px;
+      padding: 13px;
+      border-radius: 10px;
+      color: #111;
+      background: linear-gradient(135deg, #ae7700, #ffe879);
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+        /* TEACHER PAUSE OVERLAY */
+    .pause-overlay {
+      position: fixed;
+      z-index: 300;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+    }
+    .pause-overlay.visible {
+      display: flex;
+    }
+    .pause-content {
+      text-align: center;
+      animation: pausePop 0.4s ease-out;
+    }
+    @keyframes pausePop {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .pause-icon-big {
+      color: #ffd700;
+      font-size: clamp(180px, 30vw, 400px);
+      line-height: 1;
+      text-shadow: 8px 8px 0 rgba(0,0,0,0.5);
+      animation: pausePulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pausePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .pause-label {
+      margin-top: 20px;
+      color: white;
+      font-size: clamp(50px, 8vw, 100px);
+      font-weight: bold;
+      letter-spacing: 15px;
+      text-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+    }
+    .pause-sub {
+      margin-top: 15px;
+      color: #ffd700;
+      font-size: clamp(25px, 3.5vw, 45px);
+    }
+        /* DEAL CELEBRATION */
+    .deal-celebration {
+      position: fixed;
+      z-index: 250;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .deal-celebration.visible {
+      display: flex;
+    }
+    .deal-content {
+      text-align: center;
+      animation: dealBounce 1s cubic-bezier(0.25, 1.5, 0.5, 1);
+    }
+    @keyframes dealBounce {
+      0% { opacity: 0; transform: scale(0.3) rotate(-15deg); }
+      50% { opacity: 1; transform: scale(1.3) rotate(5deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .deal-content .money {
+      color: #ffd700;
+      font-size: clamp(120px, 20vw, 300px);
+      line-height: 1;
+      text-shadow: 8px 8px 0 rgba(0,0,0,0.6);
+    }
+    .deal-content .label {
+      color: white;
+      font-size: clamp(50px, 8vw, 100px);
+      font-weight: bold;
+      letter-spacing: 10px;
+      text-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+    }
+    .deal-content .amount {
+      margin-top: 15px;
+      color: #ffd700;
+      font-size: clamp(60px, 10vw, 140px);
+      font-weight: bold;
+    }
+
+    /* CONFETTI */
+    .confetti-piece {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      opacity: 0;
+      animation: confettiFall 3s linear forwards;
+    }
+    @keyframes confettiFall {
+      0% {
+        opacity: 1;
+        transform: translateY(-100vh) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(720deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- SPLASH -->
+  <section id="splashPage" class="tv-page active">
+    <div class="splash-card">
+      <h1>DEAL</h1>
+      <div class="or-text">OR</div>
+      <h2>NO DEAL</h2>
+    </div>
+  </section>
+
+  <!-- ROULETTE -->
+  <section id="roulettePage" class="tv-page">
+    <h1>LUCKY STAR ROULETTE</h1>
+    <div class="roulette-container">
+      <div class="roulette-pointer"></div>
+      <div id="rouletteWheel" class="roulette-wheel"></div>
+      <div class="roulette-center"></div>
+    </div>
+    <div id="resultPopup" class="result-popup">
+      <div class="result-card">
+        <div class="label">⭐ LUCKY STAR ⭐</div>
+        <div id="resultName" class="name">NAME</div>
+        <div class="subtitle">is the chosen one!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOMEPAGE -->
+  <section id="homepagePage" class="tv-page">
+    <h1 class="homepage-title">BSIT 1E — DEAL OR NO DEAL</h1>
+    <div class="homepage-grid">
+      <aside class="panel">
+        <h2>Values</h2>
+        <div id="valueBoard"></div>
+      </aside>
+      <main class="panel">
+        <h2>Group Scores</h2>
+        <div id="scoreBoard"></div>
+        <h2>Briefcases</h2>
+        <div id="briefcaseBoard"></div>
+        <div class="lucky-star-info">
+          Lucky Star: <strong id="luckyStarName">Not selected</strong>
+          &nbsp;|&nbsp; Group: <strong id="luckyStarGroup">—</strong>
+          &nbsp;|&nbsp; Lucky Briefcase: <strong id="luckyBriefcase">—</strong>
+        </div>
+      </main>
+      <aside class="panel">
+        <h2>Previous Offers</h2>
+        <div id="offerBoard"></div>
+      </aside>
+    </div>
+        <div class="homepage-logo">
+      BSIT 1E<br>
+      DEAL OR NO DEAL
+    </div>
+  </section>
+
+  <!-- BRIEFCASE PAGE (question/value/explanation) -->
+  <section id="briefcasePage" class="tv-page">
+    <div class="briefcase-layout">
+      <!-- LEFT GROUP INDICATORS -->
+      <div class="group-column" id="leftGroupColumn"></div>
+
+      <!-- CENTER CONTENT -->
+      <div class="briefcase-center">
+        <div class="briefcase-content" id="briefcaseContent">
+          <!-- dynamically populated -->
+        </div>
+      </div>
+
+      <!-- RIGHT GROUP INDICATORS -->
+      <div class="group-column" id="rightGroupColumn"></div>
+    </div>
+  </section>
+
+    <!-- GAME END SCREEN -->
+  <section id="gameEndPage" class="tv-page">
+    <div class="game-end-container">
+      <div class="game-end-card">
+        <div class="game-end-crown">👑</div>
+        <h1 id="gameEndTitle">CONGRATULATIONS!</h1>
+        <div id="gameEndWinner" class="game-end-winner">
+          GROUP X
+        </div>
+        <div id="gameEndScore" class="game-end-score">
+          ₱0
+        </div>
+        <div class="game-end-label">CHAMPION!</div>
+        <div id="gameEndAllScores" class="game-end-all-scores"></div>
+      </div>
+    </div>
+  </section>
+
+    <!-- TEACHER PAUSE OVERLAY -->
+  <div id="pauseOverlay" class="pause-overlay">
+    <div class="pause-content">
+      <div class="pause-icon-big">⏸</div>
+      <div class="pause-label">PAUSED</div>
+      <div class="pause-sub">Ginoong Ricky is speaking...</div>
+    </div>
+  </div>
+
+    <!-- DEAL CELEBRATION OVERLAY -->
+  <div id="dealCelebration" class="deal-celebration">
+    <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.8);"></div>
+    <div class="deal-content" style="position: relative; z-index: 2;">
+      <div class="money">💰</div>
+      <div class="label">DEAL!</div>
+      <div id="dealAmount" class="amount">₱0</div>
+    </div>
+    <div id="confettiContainer" style="position: absolute; inset: 0; z-index: 1;"></div>
+  </div>
+
+    <!-- BANKER CALL OVERLAY -->
+  <div id="bankerCallOverlay" class="banker-overlay">
+    <div class="banker-content">
+      <div class="phone-icon">📞</div>
+      <div class="banker-label">THE BANKER</div>
+      <div class="banker-sub">is calling...</div>
+    </div>
+  </div>
+
+  <div id="connectionStatus">Connecting...</div>
+
+  <!-- SOUND EFFECTS SYSTEM -->
+  <script>
+    const sounds = {};
+
+    function preloadSound(name, filename) {
+      const audio = new Audio(`/sounds/${filename}`);
+      audio.preload = "auto";
+      audio.volume = 0.7;
+      sounds[name] = audio;
+    }
+
+    // Preload all sounds. Silent if file missing.
+    preloadSound("buzzer", "buzzer.mp3");
+    preloadSound("correct", "correct.mp3");
+    preloadSound("wrong", "wrong.mp3");
+    preloadSound("spin", "spin.mp3");
+    preloadSound("bankerCall", "banker-call.mp3");
+    preloadSound("deal", "deal.mp3");
+    preloadSound("noDeal", "no-deal.mp3");
+    preloadSound("winner", "winner.mp3");
+    preloadSound("briefcaseOpen", "briefcase-open.mp3");
+    preloadSound("reveal", "reveal.mp3");
+    preloadSound("rouletteWinner", "roulette-winner.mp3");
+
+    function playSound(name) {
+      const audio = sounds[name];
+      if (!audio) return;
+      try {
+        audio.currentTime = 0;
+        const playPromise = audio.play();
+        if (playPromise) {
+          playPromise.catch(() => {
+            // Ignore autoplay policy errors.
+          });
+        }
+      } catch (e) {
+        // Ignore.
+      }
+    }
+
+    function stopSound(name) {
+      const audio = sounds[name];
+      if (!audio) return;
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch (e) {}
+    }
+  </script>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const connectionStatus = document.getElementById("connectionStatus");
+
+        const pageElements = {
+      splash: document.getElementById("splashPage"),
+      roulette: document.getElementById("roulettePage"),
+      homepage: document.getElementById("homepagePage"),
+      briefcase: document.getElementById("briefcasePage"),
+      game_end: document.getElementById("gameEndPage")
+    };
+
+    const rouletteWheel = document.getElementById("rouletteWheel");
+    const resultPopup = document.getElementById("resultPopup");
+    const resultName = document.getElementById("resultName");
+
+    let currentRouletteNames = null;
+    let spinAnimationScheduled = false;
+
+        // Track state transitions to trigger sounds only once per event.
+    let prevState = {
+      isSpinning: false,
+      showResult: false,
+      buzzerFirstPresser: null,
+      briefcaseView: null,
+      briefcaseCaseNumber: null,
+      bankerIsCalling: false,
+      revealedRound: null,
+      currentPage: null,
+      luckyBriefcaseRevealed: false,
+      dealAccepted: null,
+      pauseActive: false
+    };
+
+    socket.on("connect", () => {
+      connectionStatus.textContent = "Connected";
+      connectionStatus.style.background = "#087f3e";
+      socket.emit("register-device", "tv");
+    });
+
+    socket.on("disconnect", () => {
+      connectionStatus.textContent = "Disconnected";
+      connectionStatus.style.background = "#9b1c1c";
+    });
+
+    socket.on("game-state", (state) => {
+      renderGameState(state);
+    });
+
+        function renderGameState(state) {
+      // Trigger sounds BEFORE re-rendering.
+      triggerSoundEffects(state);
+
+      showPage(state.currentPage);
+      renderRoulette(state.roulette);
+      renderValueBoard(state.briefcases);
+      renderScores(state.groups);
+      renderBriefcases(state.briefcases, state.luckyStar);
+      renderOffers(state.banker);
+      renderLuckyStar(state.luckyStar);
+      renderBriefcasePage(state);
+      renderBankerOverlay(state.banker);
+      renderGameEnd(state.gameEnd);
+      renderPauseOverlay(state.pauseOverlay);
+            renderDealCelebration(state.banker);
+    }
+
+    function triggerSoundEffects(state) {
+      // 1. Roulette spin start
+      if (state.roulette.isSpinning && !prevState.isSpinning) {
+        playSound("spin");
+      }
+
+      // 2. Roulette result popup shown
+      if (state.roulette.showResult && !prevState.showResult) {
+        playSound("rouletteWinner");
+      }
+
+      // 3. Buzzer first press
+      if (
+        state.buzzer &&
+        state.buzzer.firstPresser &&
+        state.buzzer.firstPresser !== prevState.buzzerFirstPresser
+      ) {
+        playSound("buzzer");
+      }
+
+      // 4. Briefcase opened (new one)
+      if (
+        state.activeBriefcase.caseNumber &&
+        state.activeBriefcase.caseNumber !== prevState.briefcaseCaseNumber
+      ) {
+        playSound("briefcaseOpen");
+      }
+
+      // 5. Value revealed (view changed from question to value)
+      if (
+        state.activeBriefcase.view === "value" &&
+        prevState.briefcaseView !== "value"
+      ) {
+        // Only play "correct" if someone won it (not lucky briefcase auto-reveal)
+        const isLuckyReveal =
+          state.luckyStar.luckyBriefcase === state.activeBriefcase.caseNumber;
+
+        if (isLuckyReveal) {
+          playSound("reveal");
+        } else {
+          playSound("correct");
+        }
+      }
+
+      // 6. Banker calling
+      if (state.banker.isCalling && !prevState.bankerIsCalling) {
+        playSound("bankerCall");
+      }
+
+      // 7. Banker offer revealed
+      if (
+        state.banker.revealedRound !== null &&
+        state.banker.revealedRound !== prevState.revealedRound
+      ) {
+        playSound("reveal");
+      }
+
+      // 8. Deal / No Deal
+      if (
+        state.banker.dealAccepted &&
+        (!prevState.dealAccepted ||
+          state.banker.dealAccepted.round !== prevState.dealAccepted?.round)
+      ) {
+        playSound("deal");
+      }
+
+      // 9. Game end / winner
+      if (
+        state.currentPage === "game_end" &&
+        prevState.currentPage !== "game_end"
+      ) {
+        setTimeout(() => playSound("winner"), 300);
+      }
+
+      // 10. Pause toggle
+      if (
+        state.pauseOverlay &&
+        state.pauseOverlay.isActive !== prevState.pauseActive
+      ) {
+        // Optional: pause sound
+      }
+
+      // Update previous state.
+      prevState = {
+        isSpinning: state.roulette.isSpinning,
+        showResult: state.roulette.showResult,
+        buzzerFirstPresser: state.buzzer?.firstPresser ?? null,
+        briefcaseView: state.activeBriefcase.view,
+        briefcaseCaseNumber: state.activeBriefcase.caseNumber,
+        bankerIsCalling: state.banker.isCalling,
+        revealedRound: state.banker.revealedRound,
+        currentPage: state.currentPage,
+        luckyBriefcaseRevealed: false,
+        dealAccepted: state.banker.dealAccepted,
+        pauseActive: state.pauseOverlay?.isActive ?? false
+      };
+    }
+
+
+
+    function showPage(pageName) {
+      Object.values(pageElements).forEach((p) => p.classList.remove("active"));
+      const target = pageElements[pageName];
+      if (target) target.classList.add("active");
+    }
+
+    /*
+    | ROULETTE
+    */
+    function renderRoulette(roulette) {
+      const namesStr = JSON.stringify(roulette.allNames);
+      if (currentRouletteNames !== namesStr) {
+        buildRouletteWheel(roulette.allNames);
+        currentRouletteNames = namesStr;
+      }
+      if (roulette.isSpinning) {
+        animateSpinToTarget(roulette.allNames.length, roulette.targetIndex);
+      }
+      if (roulette.showResult && roulette.resultName) {
+        resultName.textContent = roulette.resultName.toUpperCase();
+        resultPopup.classList.add("visible");
+      } else {
+        resultPopup.classList.remove("visible");
+      }
+    }
+
+    function buildRouletteWheel(names) {
+      rouletteWheel.innerHTML = "";
+      rouletteWheel.style.transition = "none";
+      rouletteWheel.style.transform = "rotate(0deg)";
+      void rouletteWheel.offsetHeight;
+      rouletteWheel.style.transition = "transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)";
+
+      const anglePerSlice = 360 / names.length;
+      const colors = ["#d81f1f", "#1a49b3", "#c19100", "#0f7a3e"];
+
+      names.forEach((name, idx) => {
+        const el = document.createElement("div");
+        el.className = "roulette-name";
+        const rotation = (idx * anglePerSlice) - 90;
+        el.style.transform = `rotate(${rotation}deg)`;
+        el.style.background = colors[idx % colors.length];
+        el.textContent = name;
+        rouletteWheel.appendChild(el);
+      });
+    }
+
+    function animateSpinToTarget(total, targetIndex) {
+      if (spinAnimationScheduled) return;
+      spinAnimationScheduled = true;
+      const anglePerSlice = 360 / total;
+      const extraSpins = 5;
+      const targetAngle = (extraSpins * 360) - (targetIndex * anglePerSlice);
+      rouletteWheel.style.transition = "none";
+      rouletteWheel.style.transform = "rotate(0deg)";
+      void rouletteWheel.offsetHeight;
+      rouletteWheel.style.transition = "transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)";
+      rouletteWheel.style.transform = `rotate(${targetAngle}deg)`;
+      setTimeout(() => { spinAnimationScheduled = false; }, 5100);
+    }
+
+    /*
+    | HOMEPAGE
+    */
+    function renderValueBoard(briefcases) {
+      const board = document.getElementById("valueBoard");
+      board.innerHTML = "";
+      briefcases.allValues.forEach((val) => {
+        const el = document.createElement("div");
+        el.className = "value-item";
+        if (briefcases.claimedValues.includes(val)) el.classList.add("claimed");
+        el.textContent = `₱${val}`;
+        board.appendChild(el);
+      });
+    }
+
+        // Track previous scores to detect changes.
+    let previousScores = {};
+
+    function renderScores(groups) {
+      const board = document.getElementById("scoreBoard");
+      board.innerHTML = "";
+      Object.entries(groups).forEach(([num, data]) => {
+        const card = document.createElement("div");
+        card.className = "score-card";
+
+        // Detect score change → add animation class.
+        if (previousScores[num] !== undefined && previousScores[num] !== data.score) {
+          card.classList.add("score-updated");
+        }
+
+        card.innerHTML = `
+          <strong>Group ${num}</strong>
+          <span class="score-number">₱${data.score}</span>
+        `;
+        board.appendChild(card);
+
+        previousScores[num] = data.score;
+      });
+    }
+
+    function renderBriefcases(briefcases, luckyStar) {
+      const board = document.getElementById("briefcaseBoard");
+      board.innerHTML = "";
+      Object.entries(briefcases.cases).forEach(([num, data]) => {
+        const el = document.createElement("div");
+        el.className = "briefcase";
+        if (data.isOpened) el.classList.add("opened");
+        if (luckyStar.luckyBriefcase === parseInt(num, 10)) {
+          el.classList.add("lucky");
+        }
+        el.textContent = num;
+        board.appendChild(el);
+      });
+    }
+
+        function renderOffers(banker) {
+      const board = document.getElementById("offerBoard");
+      board.innerHTML = "";
+      banker.offers.forEach((offer, i) => {
+        const el = document.createElement("div");
+        el.className = "offer-item";
+        const roundNum = i + 1;
+
+        // Highlight the currently-revealed round.
+        if (banker.revealedRound === roundNum && offer !== null) {
+          el.classList.add("highlighted");
+        }
+        // Highlight the current active round (dashed border).
+        if (banker.currentRound === roundNum && offer === null) {
+          el.classList.add("current-round");
+        }
+
+        el.textContent = offer === null
+          ? `Offer ${roundNum}: N/A`
+          : `Offer ${roundNum}: ₱${offer}`;
+        board.appendChild(el);
+      });
+    }
+
+    function renderLuckyStar(ls) {
+      document.getElementById("luckyStarName").textContent = ls.name ?? "Not selected";
+      document.getElementById("luckyStarGroup").textContent = ls.group ?? "—";
+      document.getElementById("luckyBriefcase").textContent = ls.luckyBriefcase ?? "—";
+    }
+
+        function renderBankerOverlay(banker) {
+      const overlay = document.getElementById("bankerCallOverlay");
+      if (!overlay) return;
+      if (banker.isCalling) {
+        overlay.classList.add("visible");
+      } else {
+        overlay.classList.remove("visible");
+      }
+    }
+
+        function renderGameEnd(gameEnd) {
+      if (!gameEnd) return;
+
+      const titleEl = document.getElementById("gameEndTitle");
+      const winnerEl = document.getElementById("gameEndWinner");
+      const scoreEl = document.getElementById("gameEndScore");
+      const allScoresEl = document.getElementById("gameEndAllScores");
+
+      if (!titleEl) return;
+
+      if (gameEnd.isTied) {
+        titleEl.textContent = "IT'S A TIE!";
+        winnerEl.textContent = "MULTIPLE WINNERS";
+      } else {
+        titleEl.textContent = "CONGRATULATIONS!";
+        winnerEl.textContent = `GROUP ${gameEnd.winnerGroup}`;
+      }
+
+      scoreEl.textContent = `₱${gameEnd.highestScore}`;
+
+      allScoresEl.innerHTML = "";
+      const sortedScores = Object.entries(gameEnd.allScores)
+        .sort((a, b) => b[1] - a[1]);
+
+            sortedScores.forEach(([groupNum, score]) => {
+        const el = document.createElement("div");
+        el.className = "end-score-item";
+        if (score === gameEnd.highestScore && score > 0) {
+          el.classList.add("winner");
+        }
+        el.innerHTML = `Group ${groupNum}<br><strong>₱${score}</strong>`;
+        allScoresEl.appendChild(el);
+      });
+
+      // Add confetti to game end screen too.
+      const existingConfetti = document.getElementById("gameEndConfetti");
+      if (existingConfetti) existingConfetti.remove();
+
+      const confettiDiv = document.createElement("div");
+      confettiDiv.id = "gameEndConfetti";
+      confettiDiv.style.cssText = "position: absolute; inset: 0; pointer-events: none; z-index: 1;";
+      document.getElementById("gameEndPage").appendChild(confettiDiv);
+
+      const colors = ["#ffd700", "#ff6a00", "#ff2020", "#00d4ff", "#7dff5f", "#ff00d4"];
+      for (let i = 0; i < 80; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti-piece";
+        piece.style.left = Math.random() * 100 + "%";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = (Math.random() * 1) + "s";
+        piece.style.animationDuration = (3 + Math.random() * 2) + "s";
+        piece.style.animationIterationCount = "infinite";
+        confettiDiv.appendChild(piece);
+      }
+    }
+
+        function renderPauseOverlay(pauseOverlay) {
+      const overlay = document.getElementById("pauseOverlay");
+      if (!overlay || !pauseOverlay) return;
+      if (pauseOverlay.isActive) {
+        overlay.classList.add("visible");
+      } else {
+        overlay.classList.remove("visible");
+      }
+    }
+
+        let lastDealShown = null;
+
+    function renderDealCelebration(banker) {
+      const overlay = document.getElementById("dealCelebration");
+      const amountEl = document.getElementById("dealAmount");
+
+      if (!overlay || !banker) return;
+
+      // Only show for new deals.
+      if (banker.dealAccepted &&
+          banker.dealAccepted.round !== lastDealShown) {
+
+        lastDealShown = banker.dealAccepted.round;
+
+        amountEl.textContent = `₱${banker.dealAccepted.amount}`;
+        overlay.classList.add("visible");
+
+        // Generate confetti.
+        createConfetti();
+
+        // Hide after 4 seconds.
+        setTimeout(() => {
+          overlay.classList.remove("visible");
+        }, 4000);
+      }
+    }
+
+    function createConfetti() {
+      const container = document.getElementById("confettiContainer");
+      if (!container) return;
+      container.innerHTML = "";
+
+      const colors = ["#ffd700", "#ff6a00", "#ff2020", "#00d4ff", "#7dff5f", "#ff00d4"];
+
+      for (let i = 0; i < 60; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti-piece";
+        piece.style.left = Math.random() * 100 + "%";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = (Math.random() * 0.5) + "s";
+        piece.style.animationDuration = (2 + Math.random() * 2) + "s";
+        container.appendChild(piece);
+      }
+    }
+
+    /*
+    | BRIEFCASE PAGE
+    */
+    function renderBriefcasePage(state) {
+      const active = state.activeBriefcase;
+      const q = state.currentQuestion;
+      const buzzer = state.buzzer;
+
+      renderGroupIndicators(buzzer);
+
+      const content = document.getElementById("briefcaseContent");
+
+      if (!active.caseNumber || !q) {
+        content.innerHTML = `<p style="text-align:center; color:#666;">No briefcase open.</p>`;
+        return;
+      }
+
+      if (active.view === "question") {
+        const blurClass = active.questionBlurred ? "blurred" : "";
+        const choicesHtml = q.choices.map(c =>
+          `<div class="choice-item">${c.letter}. ${c.text}</div>`
+        ).join("");
+        content.innerHTML = `
+          <div class="question-text ${blurClass}">${q.question}</div>
+          <div class="choices-grid">${choicesHtml}</div>
+        `;
+      } else if (active.view === "value") {
+        const caseData = state.briefcases.cases[active.caseNumber];
+        const value = caseData.assignedValue;
+        const winnerGroup = caseData.openedByGroup;
+        content.innerHTML = `
+          <div class="value-reveal">
+            <div class="peso">₱${value}</div>
+            <div class="caption">
+              Briefcase ${active.caseNumber} — awarded to Group ${winnerGroup}!
+            </div>
+          </div>
+        `;
+            } else if (active.view === "explanation") {
+        const slides = q.explanation?.slides ?? [];
+        const currentIdx = active.explanationSlide ?? 0;
+        const slide = slides[currentIdx];
+
+        if (!slide) {
+          content.innerHTML = `<p>No explanation available.</p>`;
+          return;
+        }
+
+        const bulletsHtml = (slide.bullets || [])
+          .map(b => `<li>${b}</li>`)
+          .join("");
+
+        const totalSlides = slides.length;
+        const slideCounter = totalSlides > 1
+          ? `<div style="text-align:right; color:#666; font-size:16px; margin-bottom:10px;">
+               Slide ${currentIdx + 1} of ${totalSlides}
+             </div>`
+          : "";
+
+        content.innerHTML = `
+          ${slideCounter}
+          <div class="explanation-view">
+            <h3>${slide.title}</h3>
+            <ul>${bulletsHtml}</ul>
+          </div>
+        `;
+      }
+    }
+
+    function renderGroupIndicators(buzzer) {
+      const leftCol = document.getElementById("leftGroupColumn");
+      const rightCol = document.getElementById("rightGroupColumn");
+      leftCol.innerHTML = "";
+      rightCol.innerHTML = "";
+
+      // Left: Groups 1, 2, 4, 5
+      // Right: Groups 6, 7, 8, 9
+      const leftGroups = [1, 2, 4, 5];
+      const rightGroups = [6, 7, 8, 9];
+
+      leftGroups.forEach(g => leftCol.appendChild(createGroupIndicator(g, buzzer)));
+      rightGroups.forEach(g => rightCol.appendChild(createGroupIndicator(g, buzzer)));
+    }
+
+    function createGroupIndicator(groupNum, buzzer) {
+      const el = document.createElement("div");
+      el.className = "group-indicator";
+      el.textContent = groupNum;
+
+      if (buzzer.firstPresser === groupNum) {
+        el.classList.add("first-presser");
+      } else if (buzzer.excludedGroups.includes(groupNum)) {
+        el.classList.add("locked-out");
+      }
+
+      return el;
+    }
+  </script>
+</body>
+</html>
