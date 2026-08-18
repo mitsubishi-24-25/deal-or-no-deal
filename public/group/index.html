@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no"
+  >
+
+  <title>Deal or No Deal - Group</title>
+
+  <style>
+    :root {
+      --blue: #0064c8;
+      --blue-dark: #003a75;
+      --gold: #d6a900;
+      --red: #b31414;
+      --green: #197c1e;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      color: #111111;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(160deg, #4baaff, #0064c8);
+    }
+
+    /* Top game show banner — background image (may crop) + transparent logo on top */
+    .top-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 130px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #001333 url('/images/banner-bg.png') center / cover no-repeat;
+    }
+    .top-image img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      object-position: center;
+    }
+
+    /* Connection status */
+    #connectionStatus {
+      position: fixed;
+      z-index: 100;
+      top: 8px;
+      right: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: white;
+      background: var(--red);
+      font-size: 12px;
+    }
+
+    /* Card container */
+    .card {
+      width: 100%;
+      max-width: 500px;
+      margin: auto;
+      padding: 30px 25px;
+      border: 4px solid var(--blue-dark);
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-header {
+      display: inline-block;
+      margin: -50px 0 20px;
+      padding: 12px 25px;
+      border-radius: 12px;
+      color: white;
+      background: var(--blue-dark);
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    /* Page switching */
+    .group-page {
+      display: none;
+    }
+
+    .group-page.active {
+      display: block;
+    }
+
+    /* Form */
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--blue-dark);
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    select,
+    input[type="password"] {
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 15px;
+      border: 3px solid var(--blue-dark);
+      border-radius: 12px;
+      font-size: 18px;
+    }
+
+    button {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      background: var(--blue);
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--blue-dark);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+    }
+
+    .error-message {
+      display: none;
+      margin-top: 15px;
+      padding: 12px;
+      border: 2px solid var(--red);
+      border-radius: 10px;
+      color: var(--red);
+      background: #ffebeb;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .error-message.visible {
+      display: block;
+    }
+
+    .info-message {
+      display: none;
+      margin: 15px 0;
+      padding: 12px;
+      border: 2px solid var(--blue);
+      border-radius: 10px;
+      color: var(--blue-dark);
+      background: #e5f0ff;
+      font-size: 14px;
+    }
+
+    .info-message.visible {
+      display: block;
+    }
+
+    /* Buzzer page */
+    #buzzerPage {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+    }
+
+    #buzzerPage.active {
+      display: flex;
+    }
+
+    .group-badge {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      color: white;
+      background: var(--blue-dark);
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+        .buzzer-area {
+      display: grid;
+      flex: 1;
+      min-height: 400px;
+      padding: 30px;
+      place-items: center;
+      border: 5px solid var(--gold);
+      border-radius: 20px;
+      text-align: center;
+      background: white;
+      cursor: pointer;
+      user-select: none;
+      transition:
+        background 0.15s,
+        border-color 0.15s,
+        box-shadow 0.15s,
+        transform 0.05s;
+    }
+
+    /* INACTIVE: buzzer is not enabled */
+    .buzzer-area.buzzer-inactive {
+      cursor: not-allowed;
+      border-color: #cccccc;
+      background: #f0f0f0;
+      box-shadow: none;
+    }
+
+    .buzzer-area.buzzer-inactive .buzzer-title {
+      color: #999999;
+      text-shadow: none;
+    }
+
+    .buzzer-area.buzzer-inactive .buzzer-subtitle {
+      color: #999999;
+    }
+
+    /* ACTIVE: buzzer is live, ready to press */
+    .buzzer-area.buzzer-active {
+      border-color: var(--gold);
+      background: linear-gradient(145deg, #fff9db, #ffe680);
+      box-shadow:
+        0 0 40px rgba(214, 169, 0, 0.7),
+        inset 0 0 15px rgba(214, 169, 0, 0.3);
+      animation: buzzerPulse 1.2s ease-in-out infinite;
+    }
+
+    .buzzer-area.buzzer-active:active {
+      transform: scale(0.97);
+      background: linear-gradient(145deg, #ffe680, #ffcd1a);
+    }
+
+    @keyframes buzzerPulse {
+      0%, 100% {
+        box-shadow:
+          0 0 40px rgba(214, 169, 0, 0.7),
+          inset 0 0 15px rgba(214, 169, 0, 0.3);
+      }
+      50% {
+        box-shadow:
+          0 0 60px rgba(214, 169, 0, 1),
+          inset 0 0 25px rgba(214, 169, 0, 0.5);
+      }
+    }
+
+    /* BUZZED FIRST: this group won */
+    .buzzer-area.buzzer-first {
+      cursor: default;
+      border-color: var(--green);
+      background: linear-gradient(145deg, #d1ffd1, #66d966);
+      box-shadow: 0 0 40px rgba(25, 124, 30, 0.7);
+    }
+
+    .buzzer-area.buzzer-first .buzzer-title {
+      color: #0d5010;
+    }
+
+    .buzzer-area.buzzer-first .buzzer-subtitle {
+      color: #0d5010;
+    }
+
+    /* TOO SLOW: someone else was faster */
+    .buzzer-area.buzzer-too-slow {
+      cursor: not-allowed;
+      border-color: #888888;
+      background: linear-gradient(145deg, #d5d5d5, #999999);
+      box-shadow: none;
+    }
+
+    .buzzer-area.buzzer-too-slow .buzzer-title {
+      color: #555555;
+      text-shadow: none;
+    }
+
+    .buzzer-area.buzzer-too-slow .buzzer-subtitle {
+      color: #555555;
+    }
+
+    /* LOCKED OUT: wrong answer, cannot buzz for this question */
+    .buzzer-area.buzzer-locked-out {
+      cursor: not-allowed;
+      border-color: var(--red);
+      background: linear-gradient(145deg, #ffdada, #ff8888);
+      box-shadow: 0 0 30px rgba(179, 20, 20, 0.5);
+    }
+
+    .buzzer-area.buzzer-locked-out .buzzer-title {
+      color: #5c0000;
+      text-shadow: none;
+    }
+
+    .buzzer-area.buzzer-locked-out .buzzer-subtitle {
+      color: #5c0000;
+    }
+
+    .buzzer-title {
+      font-size: 48px;
+      font-weight: bold;
+      text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
+      transition: color 0.15s;
+    }
+
+    .buzzer-subtitle {
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      transition: color 0.15s;
+    }
+
+    .logout-link {
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      border: 2px solid var(--red);
+      border-radius: 8px;
+      color: var(--red);
+      background: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="connectionStatus">Connecting...</div>
+
+  <div class="top-image">
+    <img src="/images/banner.png" alt="Game Show" onerror="this.style.display='none';" />
+  </div>
+
+  <!-- PAGE 1: Select Group -->
+  <section id="selectGroupPage" class="group-page active">
+    <div class="card">
+      <div class="card-header">Login</div>
+
+      <label for="groupSelect">
+        Piliin ang inyong group number:
+      </label>
+
+      <select id="groupSelect">
+        <option value="">-- Pumili ng Group --</option>
+      </select>
+
+      <button id="proceedButton" type="button" disabled>
+        MAGPATULOY
+      </button>
+
+      <div id="selectError" class="error-message"></div>
+    </div>
+  </section>
+
+  <!-- PAGE 2: Enter Password -->
+  <section id="passwordPage" class="group-page">
+    <div class="card">
+      <div class="card-header">Login</div>
+
+      <div class="info-message visible" id="selectedGroupInfo">
+        Group: <strong id="selectedGroupNumber"></strong>
+      </div>
+
+      <label for="passwordInput">
+        Enter Password:
+      </label>
+
+      <input
+        id="passwordInput"
+        type="password"
+        placeholder="Password"
+        autocomplete="off"
+      >
+
+      <button id="loginButton" type="button">
+        LOGIN
+      </button>
+
+      <div id="passwordError" class="error-message"></div>
+
+      <div
+        style="margin-top: 15px; text-align: center;"
+      >
+        <a
+          href="#"
+          id="backToGroupSelect"
+          style="color: #555; font-size: 13px;"
+        >
+          ← Bumalik sa pagpili ng group
+        </a>
+      </div>
+    </div>
+  </section>
+
+    <!-- PAGE 3: Buzzer -->
+  <section id="buzzerPage" class="group-page">
+    <div class="group-badge">
+      Kayo ay: Group <span id="loggedInGroupNumber"></span>
+    </div>
+
+    <div
+      id="buzzerArea"
+      class="buzzer-area buzzer-inactive"
+    >
+      <div>
+        <div class="buzzer-title" id="buzzerTitle">
+          Group 1
+        </div>
+        <div class="buzzer-subtitle" id="buzzerSubtitle">
+          Hintayin ang Host na i-activate...
+        </div>
+      </div>
+    </div>
+
+    <button
+      class="logout-link"
+      type="button"
+      id="logoutButton"
+    >
+      LOGOUT
+    </button>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    const socket = io();
+
+        // Sound effects for group device.
+    const groupSounds = {};
+    function preloadGroupSound(name, filename) {
+      const audio = new Audio(`/sounds/${filename}`);
+      audio.preload = "auto";
+      audio.volume = 0.6;
+      groupSounds[name] = audio;
+    }
+    preloadGroupSound("buzzer", "buzzer.mp3");
+    preloadGroupSound("correct", "correct.mp3");
+    preloadGroupSound("wrong", "wrong.mp3");
+
+    function playGroupSound(name) {
+      const audio = groupSounds[name];
+      if (!audio) return;
+      try {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      } catch (e) {}
+    }
+
+    /*
+    | State
+    */
+    let selectedGroupNumber = null;
+    let currentGroupNumber = null;
+
+    /*
+    | Elements
+    */
+    const connectionStatus =
+      document.getElementById("connectionStatus");
+
+    const pages = {
+      selectGroup: document.getElementById("selectGroupPage"),
+      password: document.getElementById("passwordPage"),
+      buzzer: document.getElementById("buzzerPage")
+    };
+
+    const groupSelect = document.getElementById("groupSelect");
+    const proceedButton = document.getElementById("proceedButton");
+    const selectError = document.getElementById("selectError");
+
+    const selectedGroupNumberSpan =
+      document.getElementById("selectedGroupNumber");
+    const passwordInput = document.getElementById("passwordInput");
+    const loginButton = document.getElementById("loginButton");
+    const passwordError =
+      document.getElementById("passwordError");
+    const backToGroupSelect =
+      document.getElementById("backToGroupSelect");
+
+    const loggedInGroupNumber =
+      document.getElementById("loggedInGroupNumber");
+    const logoutButton = document.getElementById("logoutButton");
+
+    /*
+    | Session persistence via localStorage.
+    | Kapag naka-login na, i-save yung group number para
+    | kapag na-refresh yung phone, hindi na kailangan mag-login ulit.
+    */
+
+    function saveSession(groupNumber) {
+      try {
+        localStorage.setItem(
+          "dond_group",
+          String(groupNumber)
+        );
+      } catch (e) {
+        // Ignore storage errors.
+      }
+    }
+
+    function loadSession() {
+      try {
+        const saved = localStorage.getItem("dond_group");
+        return saved ? parseInt(saved, 10) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function clearSession() {
+      try {
+        localStorage.removeItem("dond_group");
+      } catch (e) {
+        // Ignore.
+      }
+    }
+
+    /*
+    | Page switching
+    */
+    function showPage(pageName) {
+      Object.values(pages).forEach((page) => {
+        page.classList.remove("active");
+      });
+      pages[pageName].classList.add("active");
+    }
+
+    /*
+    | Connection events
+    */
+    socket.on("connect", () => {
+      connectionStatus.textContent = "Connected";
+      connectionStatus.style.background = "#197c1e";
+      socket.emit("register-device", "group");
+
+      // Auto-login attempt if we have a saved session.
+      const savedGroup = loadSession();
+      if (savedGroup && currentGroupNumber === null) {
+        // Wait for available-groups event, then decide.
+        // Note: If group is still logged in on server, we can silently resume.
+        // Pero for simplicity, ipapakita natin login screens ulit.
+        // (User just types password again — safer.)
+      }
+    });
+
+    socket.on("disconnect", () => {
+      connectionStatus.textContent = "Disconnected";
+      connectionStatus.style.background = "#b31414";
+    });
+
+    /*
+    | Available groups (updates dropdown)
+    */
+    socket.on("available-groups", (availableGroups) => {
+      populateGroupDropdown(availableGroups);
+    });
+
+    /*
+    | Force logout (kapag na-force logout from controller)
+    */
+    socket.on("force-logout", () => {
+      alert("You have been logged out by the host.");
+      handleLogout();
+    });
+
+    /*
+    | Populate the dropdown with available groups.
+    */
+    function populateGroupDropdown(availableGroups) {
+      const currentValue = groupSelect.value;
+      groupSelect.innerHTML =
+        '<option value="">-- Pumili ng Group --</option>';
+
+      // If already logged in as a group, add that group as option too
+      // so na-preserve pa rin yung selection.
+      const groupsToShow = [...availableGroups];
+      if (
+        currentGroupNumber !== null &&
+        !groupsToShow.includes(currentGroupNumber)
+      ) {
+        groupsToShow.push(currentGroupNumber);
+      }
+
+      groupsToShow.sort((a, b) => a - b);
+
+      groupsToShow.forEach((groupNum) => {
+        const option = document.createElement("option");
+        option.value = groupNum;
+        option.textContent = `Group ${groupNum}`;
+        groupSelect.appendChild(option);
+      });
+
+      // Restore selection if possible.
+      if (currentValue) {
+        groupSelect.value = currentValue;
+      }
+
+      proceedButton.disabled = groupSelect.value === "";
+    }
+
+    /*
+    | Dropdown change
+    */
+    groupSelect.addEventListener("change", () => {
+      proceedButton.disabled = groupSelect.value === "";
+      selectError.classList.remove("visible");
+    });
+
+    /*
+    | Proceed to password page
+    */
+    proceedButton.addEventListener("click", () => {
+      const value = groupSelect.value;
+      if (!value) return;
+
+      selectedGroupNumber = parseInt(value, 10);
+      selectedGroupNumberSpan.textContent = selectedGroupNumber;
+      passwordInput.value = "";
+      passwordError.classList.remove("visible");
+      showPage("password");
+
+      // Focus input after brief delay (mobile-friendly).
+      setTimeout(() => {
+        passwordInput.focus();
+      }, 100);
+    });
+
+    /*
+    | Back button on password page
+    */
+    backToGroupSelect.addEventListener("click", (e) => {
+      e.preventDefault();
+      selectedGroupNumber = null;
+      passwordInput.value = "";
+      passwordError.classList.remove("visible");
+      showPage("selectGroup");
+    });
+
+    /*
+    | Login attempt
+    */
+    loginButton.addEventListener("click", () => {
+      attemptLogin();
+    });
+
+    passwordInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        attemptLogin();
+      }
+    });
+
+    function attemptLogin() {
+      const password = passwordInput.value;
+
+      if (!password) {
+        showPasswordError("Please enter a password.");
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Logging in...";
+
+      socket.emit(
+        "group-login-attempt",
+        {
+          groupNumber: selectedGroupNumber,
+          password: password
+        },
+        (response) => {
+          loginButton.disabled = false;
+          loginButton.textContent = "LOGIN";
+
+          if (response.success) {
+            currentGroupNumber = response.groupNumber;
+            saveSession(currentGroupNumber);
+            handleLoginSuccess();
+          } else {
+            showPasswordError(response.message);
+          }
+        }
+      );
+    }
+
+    function showPasswordError(message) {
+      passwordError.textContent = message;
+      passwordError.classList.add("visible");
+    }
+
+    /*
+    | Login success → go to buzzer page
+    */
+        function handleLoginSuccess() {
+      loggedInGroupNumber.textContent = currentGroupNumber;
+      showPage("buzzer");
+
+      // Set initial buzzer UI state.
+      applyBuzzerState("inactive");
+    }
+
+    /*
+    | Logout
+    */
+    logoutButton.addEventListener("click", () => {
+      handleLogout();
+    });
+
+    function handleLogout() {
+      socket.emit("group-logout");
+      currentGroupNumber = null;
+      selectedGroupNumber = null;
+      clearSession();
+      passwordInput.value = "";
+      groupSelect.value = "";
+      proceedButton.disabled = true;
+      showPage("selectGroup");
+    }
+
+        /*
+    |--------------------------------------------------------------------------
+    | BUZZER LOGIC
+    |--------------------------------------------------------------------------
+    */
+
+    const buzzerArea = document.getElementById("buzzerArea");
+    const buzzerTitle = document.getElementById("buzzerTitle");
+    const buzzerSubtitle = document.getElementById("buzzerSubtitle");
+
+    // Local state para hindi mag-spam ng press.
+    let localBuzzerState = "inactive";
+    let hasPressedThisRound = false;
+
+    // Listen for buzzer state updates from server.
+    socket.on("buzzer-state", (buzzerState) => {
+      updateBuzzerUI(buzzerState);
+    });
+
+    function updateBuzzerUI(buzzerState) {
+      if (!currentGroupNumber) return;
+
+      // Determine what this group should see.
+      let state = "inactive";
+
+      const isMeFirstPresser =
+        buzzerState.firstPresser === currentGroupNumber;
+      const isMeExcluded =
+        buzzerState.excludedGroups.includes(currentGroupNumber);
+
+      if (isMeExcluded) {
+        state = "locked-out";
+      } else if (isMeFirstPresser) {
+        state = "first";
+      } else if (buzzerState.isLocked) {
+        state = "too-slow";
+      } else if (buzzerState.isActive) {
+        state = "active";
+        hasPressedThisRound = false; // Reset kapag active ulit.
+      } else {
+        state = "inactive";
+      }
+
+      applyBuzzerState(state);
+      localBuzzerState = state;
+    }
+
+    function applyBuzzerState(state) {
+      // Remove all state classes.
+      buzzerArea.className = "buzzer-area";
+      buzzerArea.classList.add(`buzzer-${state}`);
+
+      buzzerTitle.textContent = `Group ${currentGroupNumber}`;
+
+      switch (state) {
+        case "inactive":
+          buzzerSubtitle.textContent =
+            "Hintayin ang Host na i-activate...";
+          break;
+        case "active":
+          buzzerSubtitle.textContent =
+            "Pindutin mo ako nang mabilis!";
+          break;
+        case "first":
+          buzzerSubtitle.textContent =
+            "✓ NAUNA kang pumindot!";
+          break;
+        case "too-slow":
+          buzzerSubtitle.textContent =
+            "May ibang naunang pumindot.";
+          break;
+        case "locked-out":
+          buzzerSubtitle.textContent =
+            "❌ Hintayin ang susunod na tanong.";
+          break;
+      }
+
+          function applyBuzzerState(state) {
+      const prevState = localBuzzerState;
+
+      buzzerArea.className = "buzzer-area";
+      buzzerArea.classList.add(`buzzer-${state}`);
+      buzzerTitle.textContent = `Group ${currentGroupNumber}`;
+
+      switch (state) {
+        case "inactive":
+          buzzerSubtitle.textContent = "Hintayin ang Host na i-activate...";
+          break;
+        case "active":
+          buzzerSubtitle.textContent = "Pindutin mo ako nang mabilis!";
+          break;
+        case "first":
+          buzzerSubtitle.textContent = "✓ NAUNA kang pumindot!";
+          if (prevState !== "first") playGroupSound("buzzer");
+          break;
+        case "too-slow":
+          buzzerSubtitle.textContent = "May ibang naunang pumindot.";
+          break;
+        case "locked-out":
+          buzzerSubtitle.textContent = "❌ Hintayin ang susunod na tanong.";
+          if (prevState !== "locked-out") playGroupSound("wrong");
+          break;
+      }
+    }
+    }
+
+    // Handle buzzer press.
+    buzzerArea.addEventListener("click", () => {
+      if (localBuzzerState !== "active") return;
+      if (hasPressedThisRound) return;
+
+      hasPressedThisRound = true;
+
+      socket.emit("buzzer-press", (response) => {
+        // Server response will trigger updateBuzzerUI via buzzer-state event.
+        // Pero if error (e.g., not logged in), pwede natin i-log.
+        if (!response.success) {
+          console.log("Buzzer press response:", response);
+        }
+      });
+    });
+
+    // Also support touchstart for faster response on mobile.
+    buzzerArea.addEventListener("touchstart", (e) => {
+      if (localBuzzerState !== "active") return;
+      if (hasPressedThisRound) return;
+
+      // Prevent the delayed "click" event so we don't double-send.
+      e.preventDefault();
+
+      hasPressedThisRound = true;
+
+      socket.emit("buzzer-press", (response) => {
+        if (!response.success) {
+          console.log("Buzzer press response:", response);
+        }
+      });
+    }, { passive: false });
+  </script>
+</body>
+</html>

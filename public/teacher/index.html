@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no"
+  >
+
+  <title>Ginoong Ricky - Teacher Device</title>
+
+  <style>
+    :root {
+      --blue: #0064c8;
+      --blue-dark: #003a75;
+      --red: #cc0000;
+      --green: #197c1e;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      width: 100vw;
+      min-height: 100vh;
+      margin: 0;
+      padding: 15px;
+      color: #111;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(160deg, #6bb6ff, #0064c8);
+    }
+
+    /* Top image placeholder */
+    .top-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100px;
+      margin-bottom: 15px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #001333 url('/images/banner-bg.png') center / cover no-repeat;
+    }
+    .top-image img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      object-position: center;
+    }
+
+    #connectionStatus {
+      position: fixed;
+      z-index: 1000;
+      top: 8px;
+      right: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: white;
+      background: var(--red);
+      font-size: 12px;
+    }
+
+    /* Card */
+    .card {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto 15px;
+      padding: 25px 20px;
+      border: 4px solid var(--blue-dark);
+      border-radius: 15px;
+      background: white;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      display: inline-block;
+      margin: -40px 0 15px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      color: white;
+      background: var(--blue-dark);
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Page switching */
+    .teacher-page {
+      display: none;
+    }
+
+    .teacher-page.active {
+      display: block;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--blue-dark);
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 14px;
+      border: 3px solid var(--blue-dark);
+      border-radius: 10px;
+      font-size: 18px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      background: var(--blue);
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--blue-dark);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+    }
+
+    .error-message {
+      display: none;
+      margin-top: 12px;
+      padding: 10px;
+      border: 2px solid var(--red);
+      border-radius: 8px;
+      color: var(--red);
+      background: #ffebeb;
+      font-weight: bold;
+    }
+
+    .error-message.visible {
+      display: block;
+    }
+
+    /* Greeting */
+    .greeting {
+      margin-bottom: 15px;
+      text-align: center;
+      color: var(--blue-dark);
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    /* Pause section */
+    .pause-card {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 18px;
+      border-radius: 10px;
+      color: white;
+      background: var(--red);
+    }
+
+    .pause-text {
+      flex: 1;
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    .pause-icon {
+      display: grid;
+      width: 65px;
+      height: 65px;
+      place-items: center;
+      border-radius: 50%;
+      background: white;
+      color: var(--red);
+      font-size: 32px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .pause-icon:active {
+      transform: scale(0.9);
+    }
+
+    .pause-status {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+      background: #f4f4f4;
+      color: #333;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .pause-status.active {
+      background: #fff4e0;
+      color: var(--red);
+    }
+
+    /* Dinosaur game */
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: var(--blue-dark);
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .game-area {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      overflow: hidden;
+      border: 3px solid var(--blue-dark);
+      border-radius: 12px;
+      background:
+        linear-gradient(to bottom,
+          #6ec3ff 0%,
+          #bfe9ff 55%,
+          #eaf6ff 76.8%,
+          #bcd24a 76.8%,
+          #7cb342 79.5%,
+          #d4a574 79.5%,
+          #a67144 100%);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Sun */
+    .game-area::before {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      top: 20px;
+      right: 40px;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fffbe0, #ffd54f 70%);
+      box-shadow: 0 0 32px rgba(255, 213, 79, 0.95);
+    }
+
+    /* Scrolling ground track */
+    .game-area::after {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      bottom: 14px;
+      left: 0;
+      width: 200%;
+      height: 4px;
+      background: repeating-linear-gradient(90deg,
+        #5a3a1e 0 20px, transparent 20px 40px);
+      animation: groundScroll 0.55s linear infinite;
+    }
+    @keyframes groundScroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-40px); }
+    }
+
+    .dino {
+      position: absolute;
+      z-index: 5;
+      bottom: 65px;
+      left: 50px;
+      width: 50px;
+      height: 50px;
+      border: 3px solid #2d6b1d;
+      border-radius: 50% 50% 44% 44%;
+      background: linear-gradient(160deg, #96dc66, #57a72c);
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18), inset 0 -5px 0 rgba(0, 0, 0, 0.1);
+      transition: transform 0.08s;
+    }
+    .dino.running {
+      animation: dinoBob 0.28s ease-in-out infinite;
+    }
+    @keyframes dinoBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    /* Teacher face — Ginoong Ricky (replace the image file to change him) */
+    .dino-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      overflow: hidden;
+      background: radial-gradient(circle at 40% 30%, #f3cfa0, #d4a574 75%);
+    }
+    .dino-face img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .dino-face .dino-face-fallback {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+    }
+
+    /* Little running feet */
+    .dino .foot {
+      position: absolute;
+      z-index: 6;
+      bottom: -9px;
+      width: 11px;
+      height: 15px;
+      border-radius: 4px 4px 5px 5px;
+      background: #3a6e1f;
+      box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.15);
+    }
+    .dino .foot.left { left: 9px; }
+    .dino .foot.right { right: 9px; }
+    .dino.running .foot.left { animation: footLeft 0.28s linear infinite; }
+    .dino.running .foot.right { animation: footRight 0.28s linear infinite; }
+    @keyframes footLeft {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(-16deg); }
+    }
+    @keyframes footRight {
+      0%, 100% { transform: translateY(-7px) rotate(16deg); }
+      50% { transform: translateY(0) rotate(0deg); }
+    }
+
+    .dino.flying {
+      bottom: 180px;
+      border-color: #ffd700;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      animation: floatFly 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatFly {
+      from { transform: translateY(0); }
+      to { transform: translateY(-8px); }
+    }
+
+    .cactus {
+      position: absolute;
+      z-index: 4;
+      bottom: 65px;
+      width: 20px;
+      height: 40px;
+      border-radius: 8px 8px 4px 4px;
+      background: linear-gradient(160deg, #4a9c2a, #2d6b1d);
+      box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .cactus::before,
+    .cactus::after {
+      position: absolute;
+      width: 8px;
+      background: #2d6b1d;
+      border-radius: 5px 5px 3px 3px;
+      content: "";
+    }
+
+    .cactus::before {
+      top: 8px; left: -8px;
+      height: 15px;
+    }
+
+    .cactus::after {
+      top: 5px; right: -8px;
+      height: 12px;
+    }
+
+    .cloud {
+      position: absolute;
+      z-index: 2;
+      color: white;
+      font-size: 30px;
+      opacity: 0.9;
+      filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.12));
+      animation: cloudFloat 6s ease-in-out infinite;
+    }
+    @keyframes cloudFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .powerup {
+      position: absolute;
+      z-index: 6;
+      display: grid;
+      width: 30px; height: 30px;
+      place-items: center;
+      border-radius: 50%;
+      background: #ffd700;
+      color: white;
+      font-size: 18px;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.9);
+      animation: powerupPulse 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes powerupPulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.15); }
+    }
+
+    .game-over {
+      position: absolute;
+      z-index: 20;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      text-align: center;
+    }
+
+    .game-over.visible {
+      display: flex;
+    }
+
+    .game-over h2 {
+      margin: 0 0 10px;
+      color: var(--red);
+      font-size: 30px;
+    }
+
+    .game-over p {
+      margin: 5px 0;
+      font-size: 16px;
+    }
+
+    .powerup-badge {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+      background: #f4f4f4;
+      color: var(--blue-dark);
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .powerup-badge.active {
+      background: linear-gradient(135deg, #ffd700, #ff9500);
+      color: white;
+    }
+
+    .logout-link {
+      display: block;
+      width: 100%;
+      margin-top: 15px;
+      padding: 10px;
+      border: 2px solid var(--red);
+      border-radius: 8px;
+      color: var(--red);
+      background: white;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="connectionStatus">Connecting...</div>
+
+  <div class="top-image">
+    <img src="/images/banner.png" alt="Game Show" onerror="this.style.display='none';" />
+  </div>
+
+  <!-- LOGIN PAGE -->
+  <section id="loginPage" class="teacher-page active">
+    <div class="card">
+      <div class="card-header">Teacher Login</div>
+
+      <div style="
+        margin-bottom: 15px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #eaf4ff;
+        color: var(--blue-dark);
+        font-weight: bold;
+      ">
+        Magandang araw po, Ginoong Ricky!
+      </div>
+
+      <label for="teacherPassword">Enter Password:</label>
+      <input
+        id="teacherPassword"
+        type="password"
+        placeholder="Password"
+        autocomplete="off"
+      >
+
+      <button id="loginButton" type="button">LOGIN</button>
+
+      <div id="loginError" class="error-message"></div>
+    </div>
+  </section>
+
+  <!-- MAIN PAGE -->
+  <section id="mainPage" class="teacher-page">
+    <div class="greeting">Hello po, Ginoong Ricky!</div>
+
+    <!-- PAUSE SECTION -->
+    <div class="card">
+      <div class="pause-card">
+        <div class="pause-text">
+          Maaring pindutin kung may nais sabihin o i-pause ang gameshow
+        </div>
+        <div id="pauseIcon" class="pause-icon">⏸</div>
+      </div>
+      <div id="pauseStatus" class="pause-status">
+        Hindi naka-pause
+      </div>
+    </div>
+
+    <!-- DINOSAUR GAME -->
+    <div class="card">
+      <div class="game-header">
+        <span>Best Score: <span id="bestScore">0</span></span>
+        <span>Score: <span id="currentScore">0</span></span>
+      </div>
+
+      <div id="gameArea" class="game-area">
+        <div class="cloud" style="top: 20px; left: 60px;">☁️</div>
+        <div class="cloud" style="top: 40px; right: 70px;">☁️</div>
+
+        <div id="dino" class="dino">
+          <div class="dino-face">
+            <img src="/images/ginoong-ricky.png" alt="" onerror="this.remove();" />
+            <div class="dino-face-fallback"></div>
+          </div>
+          <div class="foot left"></div>
+          <div class="foot right"></div>
+        </div>
+
+        <div id="gameOverScreen" class="game-over">
+          <h2>Game Over!</h2>
+          <p>Score: <span id="finalScore">0</span></p>
+          <p style="margin-top: 15px; font-size: 14px;">
+            Pindutin upang maglarong muli
+          </p>
+        </div>
+      </div>
+
+      <div id="powerupBadge" class="powerup-badge">
+        Susunod na Power-Up in: <span id="powerupCountdown">10</span>s
+      </div>
+
+      <p style="
+        margin-top: 8px;
+        text-align: center;
+        color: #666;
+        font-size: 13px;
+      ">
+        Pumindot sa game area para tumalon. Pindutin ang makikitang powerup ⭐ upang lumipad ng 5s!
+      </p>
+    </div>
+
+    <button class="logout-link" type="button" id="logoutButton">
+      LOGOUT
+    </button>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    const socket = io();
+
+    /*
+    | ELEMENTS
+    */
+    const connectionStatus = document.getElementById("connectionStatus");
+    const pages = {
+      login: document.getElementById("loginPage"),
+      main: document.getElementById("mainPage")
+    };
+    const passwordInput = document.getElementById("teacherPassword");
+    const loginButton = document.getElementById("loginButton");
+    const loginError = document.getElementById("loginError");
+    const logoutButton = document.getElementById("logoutButton");
+    const pauseIcon = document.getElementById("pauseIcon");
+    const pauseStatus = document.getElementById("pauseStatus");
+
+    /*
+    | STATE
+    */
+    let isLoggedIn = false;
+    let isPaused = false;
+
+    /*
+    | CONNECTION
+    */
+    socket.on("connect", () => {
+      connectionStatus.textContent = "Connected";
+      connectionStatus.style.background = "#197c1e";
+      socket.emit("register-device", "group"); // Register as group-type
+    });
+
+    socket.on("disconnect", () => {
+      connectionStatus.textContent = "Disconnected";
+      connectionStatus.style.background = "#cc0000";
+    });
+
+    /*
+    | PAGE SWITCHING
+    */
+    function showPage(pageName) {
+      Object.values(pages).forEach(p => p.classList.remove("active"));
+      pages[pageName].classList.add("active");
+    }
+
+    /*
+    | LOGIN
+    */
+    loginButton.addEventListener("click", attemptLogin);
+    passwordInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") attemptLogin();
+    });
+
+    function attemptLogin() {
+      const password = passwordInput.value;
+      if (!password) {
+        showLoginError("Please enter a password.");
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Logging in...";
+
+      socket.emit(
+        "teacher-login-attempt",
+        { password: password },
+        (response) => {
+          loginButton.disabled = false;
+          loginButton.textContent = "LOGIN";
+
+          if (response.success) {
+            isLoggedIn = true;
+            showPage("main");
+            resetDinoGame();
+          } else {
+            showLoginError(response.message);
+          }
+        }
+      );
+    }
+
+    function showLoginError(message) {
+      loginError.textContent = message;
+      loginError.classList.add("visible");
+    }
+
+    /*
+    | LOGOUT
+    */
+    logoutButton.addEventListener("click", () => {
+      socket.emit("teacher-logout");
+      isLoggedIn = false;
+      passwordInput.value = "";
+      loginError.classList.remove("visible");
+      stopDinoGame();
+      showPage("login");
+    });
+
+    /*
+    | PAUSE
+    */
+    pauseIcon.addEventListener("click", () => {
+      if (!isLoggedIn) return;
+
+      socket.emit("teacher-toggle-pause", (response) => {
+        if (response?.success) {
+          isPaused = response.isPaused;
+          updatePauseUI();
+        }
+      });
+    });
+
+    // Also listen for global state updates.
+    socket.on("game-state", (state) => {
+      if (state.pauseOverlay) {
+        isPaused = state.pauseOverlay.isActive;
+        updatePauseUI();
+      }
+    });
+
+    function updatePauseUI() {
+      if (isPaused) {
+        pauseIcon.textContent = "▶";
+        pauseStatus.textContent = "⏸ NAKA-HINTO — Pindutin ang ▶ upang magpatuloy";
+        pauseStatus.classList.add("active");
+      } else {
+        pauseIcon.textContent = "⏸";
+        pauseStatus.textContent = "Pause is OFF";
+        pauseStatus.classList.remove("active");
+      }
+    }
+
+    /*
+    |========================================================================
+    | DINOSAUR GAME
+    |========================================================================
+    */
+
+    const gameArea = document.getElementById("gameArea");
+    const dino = document.getElementById("dino");
+    const gameOverScreen = document.getElementById("gameOverScreen");
+    const currentScoreEl = document.getElementById("currentScore");
+    const bestScoreEl = document.getElementById("bestScore");
+    const finalScoreEl = document.getElementById("finalScore");
+    const powerupCountdownEl = document.getElementById("powerupCountdown");
+    const powerupBadge = document.getElementById("powerupBadge");
+
+    let gameState = "idle";  // "idle" | "playing" | "over"
+    let score = 0;
+    let bestScore = 0;
+    let gameStartTime = 0;
+    let gameLoopId = null;
+    let scoreLoopId = null;
+
+    let dinoY = 0;         // Current jump height (px above ground)
+    let dinoVY = 0;        // Vertical velocity
+    let isJumping = false;
+    let isFlying = false;
+    let flyEndTime = 0;
+    let flyLandingSafe = false;
+
+    let cacti = [];        // Active cactus obstacles
+    let cactusTimer = 0;
+    let nextCactusIn = 0;
+
+    let powerup = null;    // Active powerup
+    let nextPowerupAt = 0;
+    let powerupTimer = 10;
+
+    // Load best score from localStorage.
+    try {
+      bestScore = parseInt(localStorage.getItem("dino_best") || "0", 10);
+    } catch (e) {
+      bestScore = 0;
+    }
+    bestScoreEl.textContent = bestScore;
+
+    /*
+    | INPUT
+    */
+    gameArea.addEventListener("click", handleGameTap);
+    gameArea.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      handleGameTap();
+    }, { passive: false });
+
+    function handleGameTap() {
+      // Check if tapped a powerup first.
+      if (powerup && gameState === "playing") {
+        // Simple approximation: if powerup is in tap zone, activate.
+        // But since we don't have exact click coords here, use proximity.
+        // Actually simpler: any tap while powerup exists activates fly.
+        // NO — that would be too easy. Let's require tapping near powerup.
+      }
+
+      if (gameState === "idle" || gameState === "over") {
+        startDinoGame();
+        return;
+      }
+
+      if (gameState === "playing") {
+        jump();
+      }
+    }
+
+    // Powerup click (separate handler for the powerup element).
+    function activatePowerup() {
+      if (!powerup || gameState !== "playing") return;
+      isFlying = true;
+      flyEndTime = Date.now() + 5000;
+      // Remove powerup from screen.
+      powerup.element.remove();
+      powerup = null;
+    }
+
+    function jump() {
+      if (isFlying) return;
+      if (!isJumping) {
+        isJumping = true;
+        dinoVY = 12;
+        playJumpSound();
+      }
+    }
+
+    // Jump sound effect (add jump.mp3 to public/sounds/).
+    const jumpSound = new Audio("/sounds/jump.mp3");
+    jumpSound.volume = 0.45;
+    function playJumpSound() {
+      try {
+        jumpSound.currentTime = 0;
+        jumpSound.play().catch(() => {});
+      } catch (e) {}
+    }
+
+    /*
+    | GAME LIFECYCLE
+    */
+    function startDinoGame() {
+      if (gameLoopId) return;
+
+      resetDinoGame();
+      gameState = "playing";
+      gameStartTime = Date.now();
+      gameOverScreen.classList.remove("visible");
+
+      nextCactusIn = 60 + Math.random() * 40; // frames until first cactus
+      cactusTimer = 0;
+      nextPowerupAt = Date.now() + 10000; // 10 seconds
+      powerupTimer = 10;
+
+      gameLoopId = requestAnimationFrame(gameTick);
+
+      // Score & powerup countdown loop.
+      scoreLoopId = setInterval(() => {
+        if (gameState !== "playing") return;
+
+        score = Math.floor((Date.now() - gameStartTime) / 100);
+        currentScoreEl.textContent = score;
+
+        // Powerup countdown.
+        const secLeft = Math.ceil((nextPowerupAt - Date.now()) / 1000);
+        if (secLeft > 0 && !powerup) {
+          powerupTimer = secLeft;
+          powerupCountdownEl.textContent = secLeft;
+          powerupBadge.classList.remove("active");
+        }
+
+        // Powerup spawn.
+        if (Date.now() >= nextPowerupAt && !powerup && !isFlying) {
+          spawnPowerup();
+        }
+
+        // Fly badge.
+        if (isFlying) {
+          const flyLeft = Math.ceil((flyEndTime - Date.now()) / 1000);
+          powerupBadge.textContent = `🚀 FLYING! ${flyLeft}s left`;
+          powerupBadge.classList.add("active");
+        } else if (!powerup) {
+          powerupBadge.innerHTML =
+            `Susunod na Power-Up in: <span id="powerupCountdown">${powerupTimer}</span>s`;
+        }
+      }, 100);
+    }
+
+    function stopDinoGame() {
+      gameState = "idle";
+      if (gameLoopId) {
+        cancelAnimationFrame(gameLoopId);
+        gameLoopId = null;
+      }
+      if (scoreLoopId) {
+        clearInterval(scoreLoopId);
+        scoreLoopId = null;
+      }
+      // Clear cacti and powerups.
+      cacti.forEach(c => c.element.remove());
+      cacti = [];
+      if (powerup) {
+        powerup.element.remove();
+        powerup = null;
+      }
+    }
+
+    function resetDinoGame() {
+      stopDinoGame();
+      score = 0;
+      currentScoreEl.textContent = "0";
+      dinoY = 0;
+      dinoVY = 0;
+      isJumping = false;
+      isFlying = false;
+      flyEndTime = 0;
+      dino.style.bottom = "65px";
+      dino.classList.remove("flying");
+      dino.classList.remove("running");
+      gameOverScreen.classList.remove("visible");
+      powerupBadge.classList.remove("active");
+      powerupBadge.innerHTML =
+        `Susunod na Power-Up in: <span id="powerupCountdown">10</span>s`;
+    }
+
+    function endGame() {
+      gameState = "over";
+      if (gameLoopId) {
+        cancelAnimationFrame(gameLoopId);
+        gameLoopId = null;
+      }
+      if (scoreLoopId) {
+        clearInterval(scoreLoopId);
+        scoreLoopId = null;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestScoreEl.textContent = bestScore;
+        try {
+          localStorage.setItem("dino_best", String(bestScore));
+        } catch (e) {}
+      }
+
+      finalScoreEl.textContent = score;
+      gameOverScreen.classList.add("visible");
+
+      // Clean up obstacles.
+      cacti.forEach(c => c.element.remove());
+      cacti = [];
+      if (powerup) {
+        powerup.element.remove();
+        powerup = null;
+      }
+    }
+
+    /*
+    | GAME LOOP
+    */
+    function gameTick() {
+      if (gameState !== "playing") return;
+
+      const areaWidth = gameArea.offsetWidth;
+
+      // Handle flying state.
+      if (isFlying) {
+        dino.classList.add("flying");
+        if (Date.now() >= flyEndTime) {
+          // Time to land.
+          isFlying = false;
+          dino.classList.remove("flying");
+          flyLandingSafe = true;
+          // Remove any cactus in landing zone (safe landing).
+          cacti = cacti.filter(c => {
+            const cactusLeft = c.x;
+            const dinoLeft = 50;
+            const dinoWidth = 50;
+            if (
+              cactusLeft > dinoLeft - 40 &&
+              cactusLeft < dinoLeft + dinoWidth + 60
+            ) {
+              c.element.remove();
+              return false;
+            }
+            return true;
+          });
+          setTimeout(() => { flyLandingSafe = false; }, 500);
+        }
+      } else {
+        // Handle jumping (gravity).
+        if (isJumping) {
+          dinoY += dinoVY;
+          dinoVY -= 0.8;
+          if (dinoY <= 0) {
+            dinoY = 0;
+            dinoVY = 0;
+            isJumping = false;
+          }
+          dino.style.bottom = (65 + dinoY) + "px";
+        }
+      }
+
+      // Running bob animation only while on the ground.
+      if (isFlying || isJumping) {
+        dino.classList.remove("running");
+      } else {
+        dino.classList.add("running");
+      }
+
+      // Move cacti.
+      cactusTimer++;
+      if (cactusTimer >= nextCactusIn) {
+        spawnCactus();
+        cactusTimer = 0;
+        nextCactusIn = 60 + Math.random() * 80;
+      }
+
+      cacti = cacti.filter(c => {
+        c.x -= 5;
+        c.element.style.left = c.x + "px";
+
+        // Check collision if not flying and not in safe landing.
+        if (!isFlying && !flyLandingSafe) {
+          const dinoLeft = 50;
+          const dinoRight = 100;
+          const dinoBottom = 65 + dinoY;
+          const dinoTop = dinoBottom + 50;
+
+          const cLeft = c.x;
+          const cRight = c.x + 20;
+          const cBottom = 65;
+          const cTop = 105;
+
+          if (
+            dinoRight > cLeft &&
+            dinoLeft < cRight &&
+            dinoBottom < cTop &&
+            dinoTop > cBottom
+          ) {
+            endGame();
+            return false;
+          }
+        }
+
+        // Remove if off screen.
+        if (c.x < -30) {
+          c.element.remove();
+          return false;
+        }
+        return true;
+      });
+
+      // Move powerup.
+      if (powerup) {
+        powerup.x -= 4;
+        powerup.element.style.left = powerup.x + "px";
+        if (powerup.x < -30) {
+          powerup.element.remove();
+          powerup = null;
+          nextPowerupAt = Date.now() + 10000;
+        }
+      }
+
+      if (gameState === "playing") {
+        gameLoopId = requestAnimationFrame(gameTick);
+      }
+    }
+
+    /*
+    | SPAWN OBSTACLES
+    */
+    function spawnCactus() {
+      const el = document.createElement("div");
+      el.className = "cactus";
+      const startX = gameArea.offsetWidth;
+      el.style.left = startX + "px";
+      gameArea.appendChild(el);
+      cacti.push({ element: el, x: startX });
+    }
+
+    function spawnPowerup() {
+      const el = document.createElement("div");
+      el.className = "powerup";
+      el.textContent = "⭐";
+      const startX = gameArea.offsetWidth;
+      el.style.left = startX + "px";
+      el.style.bottom = "150px";  // Floating up high
+      gameArea.appendChild(el);
+
+      // Tap on powerup activates fly.
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        activatePowerup();
+      });
+      el.addEventListener("touchstart", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        activatePowerup();
+      }, { passive: false });
+
+      powerup = { element: el, x: startX };
+    }
+  </script>
+</body>
+</html>

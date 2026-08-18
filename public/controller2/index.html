@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Deal or No Deal - Controller</title>
+
+  <style>
+    :root {
+      --blue: #0758a8;
+      --blue-dark: #00366d;
+      --gold: #d6a900;
+      --green: #168613;
+      --red: #a30d0d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 25px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #eeeeee;
+    }
+
+    .controller {
+      width: min(100%, 1100px);
+      margin: auto;
+      padding: 25px;
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      margin-top: 0;
+      color: var(--blue-dark);
+    }
+
+    .connection-status {
+      margin-bottom: 20px;
+      padding: 12px;
+      border-radius: 10px;
+      color: white;
+      background: var(--red);
+      font-weight: bold;
+    }
+
+    .section {
+      margin-bottom: 22px;
+      padding: 20px;
+      border: 2px solid #cccccc;
+      border-radius: 15px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+      color: var(--blue-dark);
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .button-grid.cols-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    button {
+      min-height: 75px;
+      padding: 15px;
+      border: 4px solid transparent;
+      border-radius: 12px;
+      color: white;
+      background: var(--blue);
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition:
+        transform 0.15s,
+        border-color 0.15s,
+        background 0.15s;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      background: var(--blue-dark);
+    }
+
+    button.selected {
+      border-color: #ffdd00;
+      color: #111111;
+      background: #ffd93d;
+      box-shadow: 0 0 15px rgba(255, 217, 61, 0.8);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    /* Offer round buttons */
+    button.offer-round.revealed {
+      filter: grayscale(100%);
+      opacity: 0.45;
+    }
+    button.offer-round.current {
+      border-color: #ffdd00;
+      box-shadow: 0 0 16px rgba(255, 217, 61, 0.9);
+      animation: offerRoundPulse 1s ease-in-out infinite alternate;
+    }
+    @keyframes offerRoundPulse {
+      from { box-shadow: 0 0 10px rgba(255, 217, 61, 0.6); }
+      to { box-shadow: 0 0 22px rgba(255, 217, 61, 1); }
+    }
+
+    .roulette-btn {
+      background: #b7280a;
+    }
+
+    .roulette-btn:hover:not(:disabled) {
+      background: #7d1a03;
+    }
+
+    .close-btn {
+      background: #5b5b5b;
+    }
+
+    .close-btn:hover:not(:disabled) {
+      background: #333333;
+    }
+
+    .confirm-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    #unselectButton {
+      background: #5f6670;
+    }
+
+    #confirmButton {
+      background: var(--green);
+    }
+
+    .status-box {
+      min-height: 90px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #eeeeee;
+      font-size: 17px;
+    }
+
+    .status-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555555;
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    #currentTvPage {
+      padding: 5px 10px;
+      border-radius: 7px;
+      color: white;
+      background: var(--blue-dark);
+    }
+
+    .lucky-star-display {
+      padding: 15px;
+      border-radius: 10px;
+      background: #f4e9c1;
+      font-size: 18px;
+    }
+
+    @media (max-width: 700px) {
+      .button-grid,
+      .button-grid.cols-4,
+      .confirm-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+        .briefcase-btn {
+      background: #d97706;
+      min-height: 65px;
+      font-size: 24px;
+    }
+    .briefcase-btn:hover:not(:disabled) {
+      background: #a45500;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="controller">
+    <h1>BSIT 1E — Controller 2 (Random Mode)</h1>
+
+    <div id="connectionStatus" class="connection-status">
+      Connecting to server...
+    </div>
+
+    <!-- TV NAVIGATION -->
+    <section class="section">
+      <h2>TV Page Navigation</h2>
+
+      <div class="button-grid">
+        <button
+          type="button"
+          class="action-button"
+          data-action="GO_TO_SPLASH"
+          data-description="Show Game Show Picture"
+        >
+          GAME SHOW PICTURE
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="GO_TO_ROULETTE"
+          data-description="Go to Roulette Page"
+        >
+          ROULETTE
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="GO_TO_HOMEPAGE"
+          data-description="Go to Homepage"
+        >
+          HOMEPAGE
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="GO_TO_DISCUSSION"
+          data-description="Go to Discussion Slides"
+          style="background: #6d28d9;"
+        >
+          📚 DISCUSSION
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="GO_TO_BUZZER_TEST"
+          data-description="Start Buzzer Test"
+          style="background: #0e7490;"
+        >
+          🔔 BUZZER TEST
+        </button>
+      </div>
+
+      <!-- Discussion slide arrows (fire immediately — no confirm needed) -->
+      <div class="button-grid" style="margin-top: 12px;">
+        <button
+          type="button"
+          class="action-button"
+          data-action="DISCUSSION_PREV"
+          data-immediate="true"
+          data-description="Previous discussion slide"
+          style="background: #374151;"
+        >
+          ◀ PREV SLIDE
+        </button>
+        <button
+          type="button"
+          class="action-button"
+          data-action="DISCUSSION_NEXT"
+          data-immediate="true"
+          data-description="Next discussion slide"
+          style="background: #374151;"
+        >
+          NEXT SLIDE ▶
+        </button>
+      </div>
+
+      <!-- Buzzer test controls -->
+      <div class="button-grid" style="margin-top: 12px;">
+        <button
+          type="button"
+          class="action-button"
+          data-action="BUZZER_TEST_RESET"
+          data-description="Reset buzzer test (restores Group 7 funny sound)"
+          style="background: #b45309;"
+        >
+          ↺ RESET TEST
+        </button>
+        <button
+          type="button"
+          class="action-button"
+          data-action="BUZZER_TEST_END"
+          data-description="End buzzer test"
+          style="background: #9b1c1c;"
+        >
+          ⏹ END TEST
+        </button>
+      </div>
+    </section>
+
+    <!-- ROULETTE CONTROLS -->
+    <section class="section">
+      <h2>Roulette Controls</h2>
+
+      <div class="button-grid cols-4">
+        <button
+          type="button"
+          class="action-button roulette-btn"
+          data-action="SPIN_ROULETTE"
+          data-params='{"spinType":"R"}'
+          data-description="Spin (Random)"
+        >
+          R
+          <br>
+          <small>Random</small>
+        </button>
+
+        <!--
+          Controller 2 (Random Mode) intentionally has NO specific-person
+          roulette buttons (A/B/Y removed). Only a truly random spin.
+        -->
+      </div>
+
+      <div style="margin-top: 15px;">
+        <button
+          type="button"
+          class="action-button close-btn"
+          data-action="CLOSE_ROULETTE_RESULT"
+          data-description="Close Roulette Result Popup"
+          style="width: 100%;"
+        >
+          CLOSE RESULT POPUP
+        </button>
+      </div>
+    </section>
+
+        <!-- LUCKY STAR ASSIGNMENT -->
+    <section class="section">
+      <h2>Lucky Star Assignment</h2>
+
+      <div style="margin-bottom: 15px;">
+        <label
+          for="luckyStarGroupSelect"
+          style="
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--blue-dark);
+          "
+        >
+          Lucky Star's Group:
+        </label>
+        <select
+          id="luckyStarGroupSelect"
+          style="
+            width: 100%;
+            padding: 15px;
+            border: 3px solid var(--blue-dark);
+            border-radius: 10px;
+            font-size: 18px;
+          "
+        >
+          <option value="">-- Select Group --</option>
+          <option value="1">Group 1</option>
+          <option value="2">Group 2</option>
+          <option value="4">Group 4</option>
+          <option value="5">Group 5</option>
+          <option value="6">Group 6</option>
+          <option value="7">Group 7</option>
+          <option value="8">Group 8</option>
+          <option value="9">Group 9</option>
+        </select>
+        <button
+          type="button"
+          id="setLuckyGroupBtn"
+          class="action-button"
+          data-action="SET_LUCKY_STAR_GROUP"
+          data-description="Set Lucky Star's Group"
+          style="margin-top: 10px; background: #7c3aed; min-height: 55px;"
+        >
+          SET GROUP
+        </button>
+      </div>
+
+      <div>
+        <label
+          for="luckyBriefcaseSelect"
+          style="
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--blue-dark);
+          "
+        >
+          Lucky Briefcase (from unopened cases):
+        </label>
+        <select
+          id="luckyBriefcaseSelect"
+          style="
+            width: 100%;
+            padding: 15px;
+            border: 3px solid var(--blue-dark);
+            border-radius: 10px;
+            font-size: 18px;
+          "
+        >
+          <option value="">-- Select Briefcase --</option>
+        </select>
+        <button
+          type="button"
+          id="setLuckyBriefcaseBtn"
+          class="action-button"
+          data-action="SET_LUCKY_BRIEFCASE"
+          data-description="Set Lucky Briefcase"
+          style="margin-top: 10px; background: #d97706; min-height: 55px;"
+        >
+          SET LUCKY BRIEFCASE
+        </button>
+      </div>
+    </section>
+
+        <!-- BUZZER CONTROLS -->
+    <section class="section">
+      <h2>Buzzer Controls</h2>
+
+      <div class="button-grid">
+        <button
+          type="button"
+          class="action-button"
+          data-action="ACTIVATE_BUZZER"
+          data-description="Activate Buzzer"
+          style="background: #197c1e;"
+        >
+          ▶ ACTIVATE BUZZER
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="DEACTIVATE_BUZZER"
+          data-description="Deactivate Buzzer"
+          style="background: #7a7a7a;"
+        >
+          ⏸ DEACTIVATE BUZZER
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="RESET_BUZZER"
+          data-description="Reset Buzzer (new question)"
+          style="background: #1a49b3;"
+        >
+          ↻ RESET (New Question)
+        </button>
+      </div>
+
+      <div class="button-grid" style="margin-top: 15px;">
+        <button
+          type="button"
+          class="action-button"
+          data-action="WRONG_ANSWER"
+          data-description="Wrong Answer (X)"
+          style="background: #b31414; grid-column: span 1;"
+        >
+          ✗ WRONG ANSWER
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="CORRECT_ANSWER"
+          data-description="Correct Answer (✓)"
+          style="background: #197c1e; grid-column: span 2;"
+        >
+          ✓ CORRECT ANSWER
+        </button>
+      </div>
+
+      <div
+        id="buzzerLiveStatus"
+        style="
+          margin-top: 15px;
+          padding: 15px;
+          border: 2px solid #ccc;
+          border-radius: 10px;
+          background: #f4f4f4;
+          font-size: 16px;
+        "
+      >
+        <strong>Buzzer State:</strong>
+        <span id="buzzerStateText">Inactive</span>
+        <br>
+        <strong>First Presser:</strong>
+        <span id="buzzerFirstText">None</span>
+        <br>
+        <strong>Locked Out Groups:</strong>
+        <span id="buzzerExcludedText">None</span>
+      </div>
+    </section>
+
+        <!-- BRIEFCASE SELECTION -->
+    <section class="section">
+      <h2>Open a Briefcase (1–10)</h2>
+
+      <div
+        class="button-grid"
+        style="grid-template-columns: repeat(5, 1fr);"
+      >
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":1}' data-description="Open Briefcase 1">1</button>
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":2}' data-description="Open Briefcase 2">2</button>
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":3}' data-description="Open Briefcase 3">3</button>
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":4}' data-description="Open Briefcase 4">4</button>
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":5}' data-description="Open Briefcase 5">5</button>
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":6}' data-description="Open Briefcase 6">6</button>
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":7}' data-description="Open Briefcase 7">7</button>
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":8}' data-description="Open Briefcase 8">8</button>
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":9}' data-description="Open Briefcase 9">9</button>
+        <button type="button" class="action-button briefcase-btn" data-action="OPEN_BRIEFCASE" data-params='{"caseNumber":10}' data-description="Open Briefcase 10">10</button>
+      </div>
+    </section>
+
+    <!-- BRIEFCASE VIEW NAVIGATION -->
+    <section class="section">
+      <h2>Question / Value / Explanation Navigation</h2>
+
+      <div class="button-grid">
+        <button
+          type="button"
+          class="action-button"
+          data-action="SHOW_EXPLANATION"
+          data-description="Show Explanation (>)"
+          style="background: #7c3aed;"
+        >
+          &gt; SHOW EXPLANATION
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="BACK_TO_QUESTION"
+          data-description="Back to Question (Q)"
+          style="background: #2563eb;"
+        >
+          Q BACK TO QUESTION
+        </button>
+      </div>
+    </section>
+
+        <!-- BANKER CONTROLS -->
+    <section class="section">
+      <h2>Banker Controls</h2>
+
+      <div class="button-grid">
+        <button
+          type="button"
+          class="action-button"
+          data-action="BANKER_CALL"
+          data-description="📞 Banker Call (compute offer)"
+          style="background: #a30d0d;"
+        >
+          📞 BANKER CALL
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="DEAL"
+          data-description="DEAL — Lucky Star accepts"
+          style="background: #197c1e;"
+        >
+          ✓ DEAL
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="NO_DEAL"
+          data-description="NO DEAL — Lucky Star rejects"
+          style="background: #b31414;"
+        >
+          ✗ NO DEAL
+        </button>
+      </div>
+
+      <div
+        style="
+          margin-top: 15px;
+          padding: 15px;
+          border: 2px dashed #ccc;
+          border-radius: 10px;
+          background: #fff8ea;
+        "
+      >
+        <strong>Computed Offer:</strong>
+        <span
+          id="computedOfferText"
+          style="font-size: 22px; color: #a30d0d; font-weight: bold;"
+        >
+          None yet
+        </span>
+        <br>
+        <strong>Round:</strong>
+        <span id="computedOfferRound" style="font-size: 20px; font-weight: bold; color: #ae7700;">
+          —
+        </span>
+        <br>
+        <small id="computedOfferBreakdown" style="color: #666;">
+          Click "Banker Call" to compute an offer.
+        </small>
+      </div>
+
+      <h3 style="margin-top: 20px;">Reveal Offer to TV (per round)</h3>
+
+      <div
+        class="button-grid"
+        style="grid-template-columns: repeat(5, 1fr);"
+      >
+        <button
+          type="button"
+          class="action-button offer-round"
+          data-action="REVEAL_BANKER_OFFER"
+          data-params='{"roundNumber":1}'
+          data-description="Reveal Round 1 Offer"
+          style="background: #ae7700; min-height: 65px; font-size: 16px;"
+        >
+          Show<br>Offer 1
+        </button>
+
+        <button
+          type="button"
+          class="action-button offer-round"
+          data-action="REVEAL_BANKER_OFFER"
+          data-params='{"roundNumber":2}'
+          data-description="Reveal Round 2 Offer"
+          style="background: #ae7700; min-height: 65px; font-size: 16px;"
+        >
+          Show<br>Offer 2
+        </button>
+
+        <button
+          type="button"
+          class="action-button offer-round"
+          data-action="REVEAL_BANKER_OFFER"
+          data-params='{"roundNumber":3}'
+          data-description="Reveal Round 3 Offer"
+          style="background: #ae7700; min-height: 65px; font-size: 16px;"
+        >
+          Show<br>Offer 3
+        </button>
+
+        <button
+          type="button"
+          class="action-button offer-round"
+          data-action="REVEAL_BANKER_OFFER"
+          data-params='{"roundNumber":4}'
+          data-description="Reveal Round 4 Offer"
+          style="background: #ae7700; min-height: 65px; font-size: 16px;"
+        >
+          Show<br>Offer 4
+        </button>
+
+        <button
+          type="button"
+          class="action-button offer-round"
+          data-action="REVEAL_BANKER_OFFER"
+          data-params='{"roundNumber":5}'
+          data-description="Reveal Round 5 Offer"
+          style="background: #ae7700; min-height: 65px; font-size: 16px;"
+        >
+          Show<br>Offer 5
+        </button>
+      </div>
+    </section>
+
+        <!-- END GAME CONTROLS -->
+    <section class="section">
+      <h2>End Game</h2>
+
+      <div class="button-grid">
+        <button
+          type="button"
+          class="action-button"
+          data-action="REVEAL_LUCKY_BRIEFCASE"
+          data-description="Reveal Lucky Briefcase (Final!)"
+          style="background: #d97706;"
+        >
+          🎁 REVEAL LUCKY BRIEFCASE
+        </button>
+
+        <button
+          type="button"
+          class="action-button"
+          data-action="SHOW_GAME_END"
+          data-description="Show Winner / Game End Screen"
+          style="background: #047857;"
+        >
+          🏆 SHOW WINNER
+        </button>
+      </div>
+    </section>
+
+    <!-- SELECTED ACTION -->
+    <section class="section">
+      <h2>Selected Action</h2>
+
+      <div class="status-box">
+        <span class="status-label">
+          Pending selection
+        </span>
+
+        <strong id="selectedActionText">
+          No action selected.
+        </strong>
+      </div>
+    </section>
+
+    <!-- CONFIRM / UNSELECT -->
+    <section class="section">
+      <div class="confirm-grid">
+        <button
+          id="unselectButton"
+          type="button"
+          disabled
+        >
+          UNSELECT
+        </button>
+
+        <button
+          id="confirmButton"
+          type="button"
+          disabled
+        >
+          CONFIRM
+        </button>
+      </div>
+    </section>
+
+    <!-- SYSTEM STATUS -->
+    <section class="section">
+      <h2>System Status</h2>
+
+      <div class="status-box">
+        <p>
+          TV is currently showing:
+          <strong id="currentTvPage">Unknown</strong>
+        </p>
+
+        <p id="actionResult">
+          Waiting for an action.
+        </p>
+      </div>
+
+      <div
+        class="lucky-star-display"
+        style="margin-top: 12px;"
+      >
+        <strong>Current Lucky Star:</strong>
+        <span id="controllerLuckyStar">
+          None
+        </span>
+      </div>
+
+      <div
+        class="lucky-star-display"
+        style="margin-top: 8px;"
+      >
+        <strong>Used names so far:</strong>
+        <span id="controllerUsedNames">
+          None
+        </span>
+      </div>
+    </section>
+
+        <!-- GROUP STATUS -->
+    <section class="section">
+      <h2>Group Login Status</h2>
+
+      <div id="groupStatusGrid" style="
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      "></div>
+    </section>
+
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    const socket = io();
+
+    let selectedAction = null;
+    let selectedButton = null;
+
+    const connectionStatus =
+      document.getElementById("connectionStatus");
+    const selectedActionText =
+      document.getElementById("selectedActionText");
+    const confirmButton =
+      document.getElementById("confirmButton");
+    const unselectButton =
+      document.getElementById("unselectButton");
+    const currentTvPage =
+      document.getElementById("currentTvPage");
+    const actionResult =
+      document.getElementById("actionResult");
+    const controllerLuckyStar =
+      document.getElementById("controllerLuckyStar");
+    const controllerUsedNames =
+      document.getElementById("controllerUsedNames");
+
+    const actionButtons =
+      document.querySelectorAll(".action-button");
+
+          const luckyStarGroupSelect =
+      document.getElementById("luckyStarGroupSelect");
+    const luckyBriefcaseSelect =
+      document.getElementById("luckyBriefcaseSelect");
+    const setLuckyGroupBtn =
+      document.getElementById("setLuckyGroupBtn");
+    const setLuckyBriefcaseBtn =
+      document.getElementById("setLuckyBriefcaseBtn");
+
+    /*
+    |--------------------------------------------------------------------------
+    | CONNECTION
+    |--------------------------------------------------------------------------
+    */
+
+    socket.on("connect", () => {
+      connectionStatus.textContent = "Connected to server";
+      connectionStatus.style.background = "#168613";
+      socket.emit("register-device", "controller2");
+    });
+
+    socket.on("disconnect", () => {
+      connectionStatus.textContent =
+        "Disconnected from server";
+      connectionStatus.style.background = "#a30d0d";
+      confirmButton.disabled = true;
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | RECEIVE GAME STATE
+    |--------------------------------------------------------------------------
+    */
+
+        socket.on("game-state", (gameState) => {
+      currentTvPage.textContent =
+        formatPageName(gameState.currentPage);
+
+      controllerLuckyStar.textContent =
+        gameState.luckyStar.name ?? "None";
+
+      const usedNames = gameState.roulette.usedNames;
+      controllerUsedNames.textContent =
+        usedNames.length === 0
+          ? "None"
+          : usedNames.join(", ");
+
+      renderGroupStatus(gameState.groups);
+        updateLuckyBriefcaseDropdown(gameState.briefcases, gameState.luckyStar);
+        updateBankerDisplay(gameState.banker);
+        updateControllerBriefcaseButtons(gameState.briefcases, gameState.luckyStar);
+        renderBuzzerStatus(gameState.buzzer);
+    });
+
+    function renderGroupStatus(groups) {
+      const grid = document.getElementById("groupStatusGrid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      Object.entries(groups).forEach(([groupNum, data]) => {
+        const card = document.createElement("div");
+        card.style.cssText = `
+          padding: 10px;
+          border-radius: 8px;
+          text-align: center;
+          font-weight: bold;
+          color: white;
+          background: ${data.isLoggedIn ? "#168613" : "#5b5b5b"};
+        `;
+        card.innerHTML = `
+          Group ${groupNum}<br>
+          <small style="font-weight: normal;">
+            ${data.isLoggedIn ? "✓ Logged in" : "Not logged in"}
+          </small>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+        function renderBuzzerStatus(buzzer) {
+      const stateText = document.getElementById("buzzerStateText");
+      const firstText = document.getElementById("buzzerFirstText");
+      const excludedText = document.getElementById("buzzerExcludedText");
+
+      if (!stateText) return;
+
+      // State text with color.
+      if (buzzer.isActive) {
+        stateText.textContent = "🟢 ACTIVE (accepting presses)";
+        stateText.style.color = "#197c1e";
+      } else if (buzzer.isLocked && buzzer.firstPresser) {
+        stateText.textContent = "🔒 LOCKED (waiting for judgment)";
+        stateText.style.color = "#c47800";
+      } else {
+        stateText.textContent = "⚫ Inactive";
+        stateText.style.color = "#555";
+      }
+
+      // First presser.
+      if (buzzer.firstPresser) {
+        firstText.textContent = `Group ${buzzer.firstPresser} 🔔`;
+        firstText.style.color = "#c47800";
+        firstText.style.fontWeight = "bold";
+      } else {
+        firstText.textContent = "None";
+        firstText.style.color = "#555";
+        firstText.style.fontWeight = "normal";
+      }
+
+      // Excluded groups.
+      if (buzzer.excludedGroups.length === 0) {
+        excludedText.textContent = "None";
+        excludedText.style.color = "#555";
+      } else {
+        excludedText.textContent =
+          buzzer.excludedGroups
+            .map((g) => `Group ${g}`)
+            .join(", ");
+        excludedText.style.color = "#b31414";
+        excludedText.style.fontWeight = "bold";
+      }
+    }
+
+        function updateLuckyBriefcaseDropdown(briefcases, luckyStar) {
+      if (!luckyBriefcaseSelect) return;
+
+      const currentValue = luckyBriefcaseSelect.value;
+
+      // Build dropdown with only unopened cases.
+      luckyBriefcaseSelect.innerHTML =
+        '<option value="">-- Select Briefcase --</option>';
+
+      Object.entries(briefcases.cases).forEach(([num, data]) => {
+        if (!data.isOpened) {
+          const option = document.createElement("option");
+          option.value = num;
+          option.textContent = `Briefcase ${num}`;
+          if (luckyStar.luckyBriefcase === parseInt(num, 10)) {
+            option.textContent += " ⭐ (current)";
+          }
+          luckyBriefcaseSelect.appendChild(option);
+        }
+      });
+
+      // Restore selection if still valid.
+      if (currentValue && !briefcases.cases[currentValue]?.isOpened) {
+        luckyBriefcaseSelect.value = currentValue;
+      }
+    }
+
+        function updateBankerDisplay(banker) {
+      const offerText = document.getElementById("computedOfferText");
+      const roundText = document.getElementById("computedOfferRound");
+      const breakdown = document.getElementById("computedOfferBreakdown");
+
+      if (!offerText || !breakdown) return;
+
+      if (banker.computedOffer === null) {
+        offerText.textContent = "None yet";
+        offerText.style.color = "#666";
+        if (roundText) roundText.textContent = "—";
+        breakdown.textContent = "Click 'Banker Call' to compute an offer.";
+      } else {
+        offerText.textContent = `₱${banker.computedOffer}`;
+        offerText.style.color = "#a30d0d";
+        if (roundText) roundText.textContent = `OFFER ${banker.computedForRound}`;
+        breakdown.textContent =
+          `Ready to reveal → click "Show Offer ${banker.computedForRound}" below.`;
+      }
+
+      updateOfferRoundButtons(banker);
+    }
+
+    // Highlight the current round's button + grayscale already-revealed offers.
+    function updateOfferRoundButtons(banker) {
+      document.querySelectorAll(".offer-round").forEach((btn) => {
+        let round;
+        try {
+          round = JSON.parse(btn.dataset.params || "{}").roundNumber;
+        } catch (e) {
+          return;
+        }
+
+        const isRevealed =
+          Array.isArray(banker.offers) && banker.offers[round - 1] != null;
+        const isCurrent = banker.computedForRound === round;
+
+        btn.classList.toggle("revealed", isRevealed);
+        btn.classList.toggle("current", isCurrent);
+
+        // Show the revealed amount on the button itself.
+        if (isRevealed) {
+          const amt = banker.offers[round - 1];
+          btn.innerHTML = `✓ Offer ${round}<br><small>₱${amt}</small>`;
+        } else {
+          btn.innerHTML = `Show<br>Offer ${round}`;
+        }
+      });
+    }
+
+        function updateControllerBriefcaseButtons(briefcases, luckyStar) {
+      document.querySelectorAll(".briefcase-btn").forEach((btn) => {
+        let params;
+        try {
+          params = JSON.parse(btn.dataset.params || "{}");
+        } catch (e) {
+          return;
+        }
+
+        const caseNum = params.caseNumber;
+        if (!caseNum) return;
+
+        const caseData = briefcases.cases[caseNum];
+        if (!caseData) return;
+
+        if (caseData.isOpened) {
+          btn.style.opacity = "0.25";
+          btn.style.filter = "grayscale(100%)";
+          btn.style.textDecoration = "line-through";
+        } else if (luckyStar.luckyBriefcase === caseNum) {
+          btn.style.opacity = "1";
+          btn.style.filter = "none";
+          btn.style.textDecoration = "none";
+          btn.style.border = "4px solid #ffd700";
+          btn.style.boxShadow = "0 0 12px rgba(255, 215, 0, 0.7)";
+        } else {
+          btn.style.opacity = "1";
+          btn.style.filter = "none";
+          btn.style.textDecoration = "none";
+          btn.style.border = "4px solid transparent";
+          btn.style.boxShadow = "none";
+        }
+      });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SELECT ACTION
+    |--------------------------------------------------------------------------
+    */
+
+    actionButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        let params = {};
+
+        if (button.dataset.params) {
+          try {
+            params = JSON.parse(button.dataset.params);
+          } catch (error) {
+            params = {};
+          }
+        }
+
+        // Immediate actions (e.g. discussion arrows) fire right away — no confirm.
+        if (button.dataset.immediate === "true") {
+          if (!socket.connected) {
+            actionResult.textContent = "Cannot execute: Controller is disconnected.";
+            return;
+          }
+          actionResult.textContent = "Sending...";
+          socket.emit(
+            "controller-action",
+            { action: button.dataset.action, params },
+            (response) => {
+              if (response && response.success) {
+                actionResult.textContent = response.message;
+              } else {
+                actionResult.textContent = `Error: ${response ? response.message : "no response"}`;
+              }
+            }
+          );
+          return;
+        }
+
+        clearButtonSelection();
+
+        selectedAction = {
+          action: button.dataset.action,
+          description: button.dataset.description,
+          params: params
+        };
+
+        selectedButton = button;
+        selectedButton.classList.add("selected");
+
+        selectedActionText.textContent =
+          selectedAction.description;
+
+        confirmButton.disabled = false;
+        unselectButton.disabled = false;
+
+        actionResult.textContent =
+          "Action selected but not executed yet.";
+      });
+    });
+
+        /*
+    | LUCKY STAR ASSIGNMENT — override the default action button behavior
+    | to include the selected value from the dropdown.
+    */
+
+    setLuckyGroupBtn.addEventListener("click", (e) => {
+      const groupNumber = luckyStarGroupSelect.value;
+      if (!groupNumber) {
+        actionResult.textContent = "Please select a group first.";
+        // Cancel selection so it doesn't try to send without value.
+        e.stopImmediatePropagation();
+        clearSelection();
+        return;
+      }
+      // Attach the group number as params.
+      setLuckyGroupBtn.dataset.params =
+        JSON.stringify({ groupNumber: parseInt(groupNumber, 10) });
+    }, true); // Capture phase so this runs BEFORE the generic handler.
+
+    setLuckyBriefcaseBtn.addEventListener("click", (e) => {
+      const caseNumber = luckyBriefcaseSelect.value;
+      if (!caseNumber) {
+        actionResult.textContent = "Please select a briefcase first.";
+        e.stopImmediatePropagation();
+        clearSelection();
+        return;
+      }
+      setLuckyBriefcaseBtn.dataset.params =
+        JSON.stringify({ caseNumber: parseInt(caseNumber, 10) });
+    }, true);
+
+    /*
+    |--------------------------------------------------------------------------
+    | UNSELECT
+    |--------------------------------------------------------------------------
+    */
+
+    unselectButton.addEventListener("click", () => {
+      clearSelection();
+      actionResult.textContent =
+        "Selection cancelled. Nothing was sent to the TV.";
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | CONFIRM
+    |--------------------------------------------------------------------------
+    */
+
+    confirmButton.addEventListener("click", () => {
+      if (!selectedAction) {
+        return;
+      }
+
+      if (!socket.connected) {
+        actionResult.textContent =
+          "Cannot execute: Controller is disconnected.";
+        return;
+      }
+
+      confirmButton.disabled = true;
+      unselectButton.disabled = true;
+
+      actionResult.textContent =
+        "Sending confirmed action to server...";
+
+      socket.emit(
+        "controller-action",
+        {
+          action: selectedAction.action,
+          params: selectedAction.params
+        },
+        (response) => {
+          if (response.success) {
+            actionResult.textContent = response.message;
+          } else {
+            actionResult.textContent =
+              `Error: ${response.message}`;
+          }
+
+          clearSelection();
+        }
+      );
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    function clearButtonSelection() {
+      actionButtons.forEach((button) => {
+        button.classList.remove("selected");
+      });
+    }
+
+    function clearSelection() {
+      clearButtonSelection();
+      selectedAction = null;
+      selectedButton = null;
+
+      selectedActionText.textContent =
+        "No action selected.";
+
+      confirmButton.disabled = true;
+      unselectButton.disabled = true;
+    }
+
+    function formatPageName(pageName) {
+      const pageLabels = {
+        splash: "Game Show Video",
+        roulette: "Roulette",
+        homepage: "Homepage",
+        briefcase: "Briefcase",
+        game_end: "Game End",
+        discussion: "Discussion",
+        buzzer_test: "Buzzer Test"
+      };
+
+      return pageLabels[pageName] ?? pageName;
+    }
+  </script>
+</body>
+</html>
