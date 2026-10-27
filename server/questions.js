@@ -25,7 +25,7 @@
       ]
     } */
 
-const questions = {
+/* const questions = {
   1: {
     question: "Saan nagtatapos ang hangganan ng mall ayon kay Morales-Nuncio?",
     choices: [
@@ -365,6 +365,188 @@ const questions = {
         }
       ]
     }
+  }
+}; */
+
+const questions = {
+  1: {
+    question: "What color is the sun?",
+    choices: [
+      { letter: "A", text: "Blue" },
+      { letter: "B", text: "Yellow" },
+      { letter: "C", text: "Purple" },
+      { letter: "D", text: "Green" }
+    ],
+    correctAnswer: "B",
+    explanation: "explanaiton"
+  },
+
+  2: {
+    question: "How many legs does a dog have?",
+    choices: [
+      { letter: "A", text: "Two" },
+      { letter: "B", text: "Three" },
+      { letter: "C", text: "Four" },
+      { letter: "D", text: "Six" }
+    ],
+    correctAnswer: "C",
+    explanation: "explanaiton"
+  },
+
+  3: {
+    question: "What sound does a cow make?",
+    choices: [
+      { letter: "A", text: "Meow" },
+      { letter: "B", text: "Moo" },
+      { letter: "C", text: "Woof" },
+      { letter: "D", text: "Quack" }
+    ],
+    correctAnswer: "B",
+    explanation: "explanaiton"
+  },
+
+  4: {
+    question: "What comes after the number 3?",
+    choices: [
+      { letter: "A", text: "1" },
+      { letter: "B", text: "2" },
+      { letter: "C", text: "5" },
+      { letter: "D", text: "4" }
+    ],
+    correctAnswer: "D",
+    explanation: "explanaiton"
+  },
+
+  5: {
+    question: "Which animal says \"meow\"?",
+    choices: [
+      { letter: "A", text: "A dog" },
+      { letter: "B", text: "A cat" },
+      { letter: "C", text: "A duck" },
+      { letter: "D", text: "A cow" }
+    ],
+    correctAnswer: "B",
+    explanation: "explanaiton"
+  },
+
+  6: {
+    question: "What do you use to see things?",
+    choices: [
+      { letter: "A", text: "Your ears" },
+      { letter: "B", text: "Your nose" },
+      { letter: "C", text: "Your eyes" },
+      { letter: "D", text: "Your feet" }
+    ],
+    correctAnswer: "C",
+    explanation: "explanaiton"
+  },
+
+  7: {
+    question: "What color are most leaves on trees?",
+    choices: [
+      { letter: "A", text: "Red" },
+      { letter: "B", text: "Green" },
+      { letter: "C", text: "Pink" },
+      { letter: "D", text: "Black" }
+    ],
+    correctAnswer: "B",
+    explanation: "explanaiton"
+  },
+
+  8: {
+    question: "How many days are in a week?",
+    choices: [
+      { letter: "A", text: "Five" },
+      { letter: "B", text: "Six" },
+      { letter: "C", text: "Seven" },
+      { letter: "D", text: "Ten" }
+    ],
+    correctAnswer: "C",
+    explanation: "explanaiton"
+  },
+
+  9: {
+    question: "What is frozen water called?",
+    choices: [
+      { letter: "A", text: "Steam" },
+      { letter: "B", text: "Juice" },
+      { letter: "C", text: "Milk" },
+      { letter: "D", text: "Ice" }
+    ],
+    correctAnswer: "D",
+    explanation: "explanaiton"
+  },
+
+  10: {
+    question: "Which fruit is yellow and monkeys love it?",
+    choices: [
+      { letter: "A", text: "An apple" },
+      { letter: "B", text: "A banana" },
+      { letter: "C", text: "A grape" },
+      { letter: "D", text: "A lemon" }
+    ],
+    correctAnswer: "B",
+    explanation: "explanaiton"
+  },
+
+  11: {
+    question: "What do bees make?",
+    choices: [
+      { letter: "A", text: "Milk" },
+      { letter: "B", text: "Bread" },
+      { letter: "C", text: "Honey" },
+      { letter: "D", text: "Butter" }
+    ],
+    correctAnswer: "C",
+    explanation: "explanaiton"
+  },
+
+  12: {
+    question: "What shape is a ball?",
+    choices: [
+      { letter: "A", text: "A square" },
+      { letter: "B", text: "A triangle" },
+      { letter: "C", text: "A circle" },
+      { letter: "D", text: "A star" }
+    ],
+    correctAnswer: "C",
+    explanation: "explanaiton"
+  },
+
+  13: {
+    question: "What do you wear on your feet?",
+    choices: [
+      { letter: "A", text: "A hat" },
+      { letter: "B", text: "Gloves" },
+      { letter: "C", text: "Shoes" },
+      { letter: "D", text: "A scarf" }
+    ],
+    correctAnswer: "C",
+    explanation: "explanaiton"
+  },
+
+  14: {
+    question: "Which animal is known as the \"King of the Jungle\"?",
+    choices: [
+      { letter: "A", text: "The elephant" },
+      { letter: "B", text: "The lion" },
+      { letter: "C", text: "The monkey" },
+      { letter: "D", text: "The zebra" }
+    ],
+    correctAnswer: "B",
+    explanation: "explanaiton"
+  },
+
+  15: {
+    question: "What do we call the meal we eat in the morning?",
+    choices: [
+      { letter: "A", text: "Dinner" },
+      { letter: "B", text: "Lunch" },
+      { letter: "C", text: "Snack" },
+      { letter: "D", text: "Breakfast" }
+    ],
+    correctAnswer: "D",
+    explanation: "explanaiton"
   }
 };
 
