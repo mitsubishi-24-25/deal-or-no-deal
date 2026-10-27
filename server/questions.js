@@ -25,7 +25,7 @@
       ]
     } */
 
-/* const questions = {
+const questions = {
   1: {
     question: "Saan nagtatapos ang hangganan ng mall ayon kay Morales-Nuncio?",
     choices: [
@@ -366,9 +366,9 @@
       ]
     }
   }
-}; */
+};
 
-const questions = {
+/* const questions = {
   1: {
     question: "What color is the sun?",
     choices: [
@@ -548,6 +548,6 @@ const questions = {
     correctAnswer: "D",
     explanation: "explanaiton"
   }
-};
+}; */
 
 module.exports = questions;
